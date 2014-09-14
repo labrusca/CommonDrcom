@@ -1,1 +1,2 @@
 *.configfile
+dist/*.configfile
