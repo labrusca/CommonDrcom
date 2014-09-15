@@ -83,9 +83,12 @@ class Gateway(wx.Frame):
         style=wx.TextAttr(font=font)
         user=wx.StaticText(panel,-1,u"用户名：",pos=(20,30)).SetFont(font)
         password=wx.StaticText(panel,-1,u"  密码：",pos=(20,70)).SetFont(font)
-        self.usrvalue=wx.TextCtrl(panel,-1,line1,pos=(120,30),size=(180,30));self.usrvalue.SetFont(font)
-        self.passwdvalue=wx.TextCtrl(panel,-1,line2,pos=(120,70),size=(180,30),style=wx.PASSWORD);self.passwdvalue.SetFont(font)
-        self.memo=wx.CheckBox(panel,-1,u"自动保存",pos=(120,120),size=(80,30));self.memo.SetFont(font2)
+        self.usrvalue=wx.TextCtrl(panel,-1,line1,pos=(120,30),size=(180,30))
+        self.usrvalue.SetFont(font)
+        self.passwdvalue=wx.TextCtrl(panel,-1,line2,pos=(120,70),size=(180,30),style=wx.PASSWORD)
+        self.passwdvalue.SetFont(font)
+        self.memo=wx.CheckBox(panel,-1,u"自动保存",pos=(120,120),size=(80,30))
+        self.memo.SetFont(font2)
         self.memo.SetValue(1)
         self.force=wx.CheckBox(panel,-1,u"(账号正在使用时)强行登录",pos=(120,150),size=(240,30));self.force.SetFont(font2)
         self.radio_box = wx.RadioBox(panel,-1, "选择登陆方式",pos=(120,190),size=(240,60),choices=["学号", "校园卡"], majorDimension=0, style=wx.RA_SPECIFY_COLS)
@@ -103,7 +106,7 @@ class Gateway(wx.Frame):
         sendback=wx.Button(panel,-1,u"联系作者",pos=(5,310),size=(80,25))
         sendback.Bind(wx.EVT_BUTTON,self.sendback)
         try:
-            test = SearchInfo()
+            test = search_info()
             autologout = logout()
             if autologout == "14":
                 self.showanser(u'请注意，上次登陆后未注销，系统已自动注销！')
@@ -144,7 +147,7 @@ class Gateway(wx.Frame):
             self.showanser(u"登陆成功")
             self.loginbutton.Enable(False)
             self.logoutbutton.Enable(True)
-            info = SearchInfo()
+            info = search_info()
             self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
@@ -160,7 +163,7 @@ class Gateway(wx.Frame):
     def logoutfunc(self,event):
         self.timer.Stop()
         try:
-            info = SearchInfo()
+            info = search_info()
             self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
@@ -179,7 +182,7 @@ class Gateway(wx.Frame):
 
     def updateinfo(self,event):
         try:
-            info = SearchInfo()
+            info = search_info()
         except:
             self.timer.Stop()
             self.showanser(self.othererror())
@@ -213,7 +216,8 @@ def turn_num(ID):
         pat = '[0-9]+'
         return re.findall(pat,deal)[1]
 
-def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):  #passwd is stringed
+#passwd is stringed
+def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
      data = {} # 初始化表单
      data["DDDDD"] = usr 
      data["upass"] = calpwd(passwd) #密码转换
@@ -292,7 +296,7 @@ def encrypt(s):
 def decrypt(s):    #WTF?!
     return encrypt(s)
 
-def SearchInfo():
+def search_info():
     try:
         response = urllib2.urlopen("http://account.njupt.edu.cn")
     except urllib2.URLError:
