@@ -50,7 +50,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 class Gateway(wx.Frame):
     "class for gateway"
     def __init__(self):
-        self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证系统V4.1  梁毅制作",\
+        self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证系统",\
                    pos=(250,200),size=(570,380),style=wx.MINIMIZE_BOX|wx.CAPTION|wx.CLOSE_BOX)
         panel=wx.Panel(self,-1)  
         self.timer = wx.Timer(self)
