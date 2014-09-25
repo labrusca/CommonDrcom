@@ -184,12 +184,12 @@ class Gateway(wx.Frame):
     def updateinfo(self,event):
         try:
             info = search_info()
+            self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
+            self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
+            self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
         except:
             self.timer.Stop()
             self.showanser(self.othererror())
-        self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
-        self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
-        self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
     def sendback(self,event):
         webopen("mailto:labrusca@live.com")
     def openpage(self,event):
