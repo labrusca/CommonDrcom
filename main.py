@@ -138,9 +138,9 @@ class Gateway(wx.Frame):
         if self.radio_box.GetSelection() == 0:
             try:
                 newline1 = turn_num(line1)
+                ans=login(newline1,line2,force=self.force.GetValue())
             except socket.gaierror:
                 self.showanser(u"网络中心无响应，请换用校园卡方式登陆！")
-            ans=login(newline1,line2,force=self.force.GetValue())
         elif self.radio_box.GetSelection() == 1:
             ans=login(line1,line2,force=self.force.GetValue())
         if ans == 1:
