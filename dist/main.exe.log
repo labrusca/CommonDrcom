@@ -7,3 +7,55 @@ UnboundLocalError: local variable 'newline1' referenced before assignment
 Traceback (most recent call last):
   File "main.py", line 143, in loginfunc
 UnboundLocalError: local variable 'newline1' referenced before assignment
+Traceback (most recent call last):
+  File "main.py", line 143, in loginfunc
+  File "main.py", line 235, in login
+  File "urllib2.pyo", line 127, in urlopen
+  File "urllib2.pyo", line 404, in open
+  File "urllib2.pyo", line 422, in _open
+  File "urllib2.pyo", line 382, in _call_chain
+  File "urllib2.pyo", line 1214, in http_open
+  File "urllib2.pyo", line 1187, in do_open
+  File "httplib.pyo", line 1067, in getresponse
+  File "httplib.pyo", line 409, in begin
+  File "httplib.pyo", line 373, in _read_status
+httplib.BadStatusLine: ''
+Traceback (most recent call last):
+  File "main.py", line 143, in loginfunc
+  File "main.py", line 235, in login
+  File "urllib2.pyo", line 127, in urlopen
+  File "urllib2.pyo", line 404, in open
+  File "urllib2.pyo", line 422, in _open
+  File "urllib2.pyo", line 382, in _call_chain
+  File "urllib2.pyo", line 1214, in http_open
+  File "urllib2.pyo", line 1187, in do_open
+  File "httplib.pyo", line 1067, in getresponse
+  File "httplib.pyo", line 409, in begin
+  File "httplib.pyo", line 373, in _read_status
+httplib.BadStatusLine: ''
+Traceback (most recent call last):
+  File "main.py", line 143, in loginfunc
+  File "main.py", line 235, in login
+  File "urllib2.pyo", line 127, in urlopen
+  File "urllib2.pyo", line 404, in open
+  File "urllib2.pyo", line 422, in _open
+  File "urllib2.pyo", line 382, in _call_chain
+  File "urllib2.pyo", line 1214, in http_open
+  File "urllib2.pyo", line 1187, in do_open
+  File "httplib.pyo", line 1067, in getresponse
+  File "httplib.pyo", line 409, in begin
+  File "httplib.pyo", line 373, in _read_status
+httplib.BadStatusLine: ''
+Traceback (most recent call last):
+  File "main.py", line 143, in loginfunc
+  File "main.py", line 235, in login
+  File "urllib2.pyo", line 127, in urlopen
+  File "urllib2.pyo", line 404, in open
+  File "urllib2.pyo", line 422, in _open
+  File "urllib2.pyo", line 382, in _call_chain
+  File "urllib2.pyo", line 1214, in http_open
+  File "urllib2.pyo", line 1187, in do_open
+  File "httplib.pyo", line 1067, in getresponse
+  File "httplib.pyo", line 409, in begin
+  File "httplib.pyo", line 373, in _read_status
+httplib.BadStatusLine: ''

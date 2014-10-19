@@ -37,7 +37,7 @@ class TaskBarIcon(wx.TaskBarIcon):
     def __init__(self, frame):
         wx.TaskBarIcon.__init__(self)
         self.frame = frame
-        self.SetIcon(wx.Icon(name='T.dll', type=wx.BITMAP_TYPE_ICO), 'TaskBarIcon!')
+        self.SetIcon(wx.Icon(name='T.dll', type=wx.BITMAP_TYPE_ICO), '南京邮电大学Dr.com认证系统')
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
 
     def OnTaskBarLeftDClick(self, event):
