@@ -106,17 +106,13 @@ class Gateway(wx.Frame):
         updateinfo.Bind(wx.EVT_BUTTON,self.openpage)
         sendback=wx.Button(panel,-1,u"联系作者",pos=(5,310),size=(80,25))
         sendback.Bind(wx.EVT_BUTTON,self.sendback)
-        try:
-            test = search_info()
-            autologout = logout()
-            if autologout == "14":
-                self.loginbutton.Enable(False)
-                self.logoutbutton.Enable(True)
-                self.timer.Start(1000)
-            else:
-                self.showanser(self.othererror())
-        except:
-            pass
+        #上次未注销时，执行：
+        is_notlogout = search_info()
+        if is_notlogout[0] != "超时":
+            self.loginbutton.Enable(False)
+            self.logoutbutton.Enable(True)
+            self.timer.Start(1000)
+
     def OnIconfiy(self, event):
         self.Hide()
         event.Skip()
@@ -142,6 +138,8 @@ class Gateway(wx.Frame):
                 ans=login(newline1,line2,force=self.force.GetValue())
             except socket.gaierror:
                 self.showanser(u"网络中心无响应，尝试用校园卡方式登陆！")
+            except IndexError:
+                self.showanser(u"非法输入，请检查用户名和密码")
                 return 0
         elif self.radio_box.GetSelection() == 1:
             ans=login(line1,line2,force=self.force.GetValue())
@@ -220,7 +218,7 @@ def turn_num(ID):
         return re.findall(pat,deal)[1]
 
 #passwd is stringed
-def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
+def login(usr, passwd, url = "http://account.njupt.edu.cn",force):
      data = {} # 初始化表单
      data["DDDDD"] = usr 
      data["upass"] = calpwd(passwd) #密码转换
@@ -305,6 +303,7 @@ def search_info():
         t = [0,0,0]
     except urllib2.URLError:
         t=["超时","超时","超时"]
+        return t
     rsp = response.read()
     t[0] = findall(r"time=\'(\d+)", rsp)[0]
     t[1] = findall(r"flow=\'(\d+)", rsp)[0]
