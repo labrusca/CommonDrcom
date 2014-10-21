@@ -110,12 +110,13 @@ class Gateway(wx.Frame):
             test = search_info()
             autologout = logout()
             if autologout == "14":
-                self.showanser(u'请注意，上次登陆后未注销，系统已自动注销！')
+                self.loginbutton.Enable(False)
+                self.logoutbutton.Enable(True)
+                self.timer.Start(1000)
             else:
                 self.showanser(self.othererror())
         except:
             pass
-
     def OnIconfiy(self, event):
         self.Hide()
         event.Skip()
@@ -140,7 +141,8 @@ class Gateway(wx.Frame):
                 newline1 = turn_num(line1)
                 ans=login(newline1,line2,force=self.force.GetValue())
             except socket.gaierror:
-                self.showanser(u"网络中心无响应，请换用校园卡方式登陆！")
+                self.showanser(u"网络中心无响应，尝试用校园卡方式登陆！")
+                return 0
         elif self.radio_box.GetSelection() == 1:
             ans=login(line1,line2,force=self.force.GetValue())
         if ans == 1:
@@ -300,10 +302,10 @@ def decrypt(s):    #WTF?!
 def search_info():
     try:
         response = urllib2.urlopen("http://account.njupt.edu.cn")
+        t = [0,0,0]
     except urllib2.URLError:
         t=["超时","超时","超时"]
     rsp = response.read()
-    t = [0,0,0]
     t[0] = findall(r"time=\'(\d+)", rsp)[0]
     t[1] = findall(r"flow=\'(\d+)", rsp)[0]
     t[2] = findall(r"fee=\'(\d+)", rsp)[0]
