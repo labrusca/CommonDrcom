@@ -107,11 +107,14 @@ class Gateway(wx.Frame):
         sendback=wx.Button(panel,-1,u"联系作者",pos=(5,310),size=(80,25))
         sendback.Bind(wx.EVT_BUTTON,self.sendback)
         #上次未注销时，执行：
-        is_notlogout = search_info()
-        if is_notlogout[0] != "超时":
-            self.loginbutton.Enable(False)
-            self.logoutbutton.Enable(True)
-            self.timer.Start(1000)
+        try:
+            is_notlogout = search_info()
+            if is_notlogout[0] != "超时":
+                self.loginbutton.Enable(False)
+                self.logoutbutton.Enable(True)
+                self.timer.Start(1000)
+        except:
+            pass
 
     def OnIconfiy(self, event):
         self.Hide()
@@ -218,7 +221,7 @@ def turn_num(ID):
         return re.findall(pat,deal)[1]
 
 #passwd is stringed
-def login(usr, passwd, url = "http://account.njupt.edu.cn",force):
+def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
      data = {} # 初始化表单
      data["DDDDD"] = usr 
      data["upass"] = calpwd(passwd) #密码转换
