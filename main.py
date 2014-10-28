@@ -141,8 +141,12 @@ class Gateway(wx.Frame):
                 ans=login(newline1,line2,force=self.force.GetValue())
             except socket.gaierror:
                 self.showanser(u"网络中心无响应，尝试用校园卡方式登陆！")
+                return 0
             except IndexError:
                 self.showanser(u"非法输入，请检查用户名和密码")
+                return 0
+            except socket.timeout:
+                self.showanser(u"超时，无法连接网络中心！")
                 return 0
         elif self.radio_box.GetSelection() == 1:
             ans=login(line1,line2,force=self.force.GetValue())
@@ -238,6 +242,8 @@ def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
          response = urllib2.urlopen(req, data,timeout=10) #获得响应
      except urllib2.URLError:
          return u"登陆超时，请重试！"
+     except httplib.BadStatusLine:
+         return u"服务器未返回数据！"
      rsp = response.read()
      temp = findall(r"You have successfully logged into our system.", rsp) #查询状态
      if not temp: #登录未成功
@@ -281,6 +287,8 @@ def logout():
         response = urllib2.urlopen("http://account.njupt.edu.cn/F.htm",timeout=10)
     except urllib2.URLError:
         return u"注销失败，网络无响应！"
+    except httplib.BadStatusLine:
+        return u"服务器未返回数据！"
     rsp = response.read()
     temp = findall(r"Msg=(\d+)", rsp)[0]
     if temp == "01":
