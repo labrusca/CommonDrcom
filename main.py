@@ -22,9 +22,9 @@ limitations under the License.
 import time
 import socket
 import urllib2
+import httplib
 import wx,re
 from webbrowser import open as webopen
-from httplib import HTTPConnection
 from urllib import urlencode
 from hashlib import md5
 from re import findall
@@ -33,14 +33,34 @@ retmp=re.compile('\w+')  #为了加速匹配
 is_logined = 0 #已登陆标记
 
 class TaskBarIcon(wx.TaskBarIcon):
-    ID_Hello = wx.NewId()
+    aboutme = wx.NewId()
+    closeme = wx.NewId()
+    updateme = wx.NewId()
     def __init__(self, frame):
         wx.TaskBarIcon.__init__(self)
         self.frame = frame
         self.SetIcon(wx.Icon(name='T.dll', type=wx.BITMAP_TYPE_ICO), '南京邮电大学Dr.com认证系统')
-        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
+        self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.on_taskbar_leftdown)
+        self.Bind(wx.EVT_MENU, self.func_updateme, id=self.updateme)
+        self.Bind(wx.EVT_MENU, self.func_aboutme, id=self.aboutme)
+        self.Bind(wx.EVT_MENU, self.func_closeme, id=self.closeme)
 
-    def OnTaskBarLeftDClick(self, event):
+    def func_updateme(self,event):
+        webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer.git")
+
+    def func_aboutme(self, event):
+        wx.MessageBox('此程序遵循Apache V2.0协议开源，托管于开源中国Git@OSC仓库\n作者：labrusca', '关于')
+
+    def func_closeme(self,event):
+        self.frame.Close()
+
+    def  CreatePopupMenu(self):
+        menu = wx.Menu()
+        menu.Append(self.updateme, '获取新版请访问仓库')
+        menu.Append(self.aboutme, '关于')
+        menu.Append(self.closeme, '退出')
+        return menu
+    def on_taskbar_leftdown(self, event):
         if self.frame.IsIconized():
            self.frame.Iconize(False)
         if not self.frame.IsShown():
@@ -55,8 +75,8 @@ class Gateway(wx.Frame):
         panel=wx.Panel(self,-1)  
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateinfo, self.timer)
-        self.Bind(wx.EVT_ICONIZE, self.OnIconfiy)
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(wx.EVT_ICONIZE, self.oniconfiy)
+        self.Bind(wx.EVT_CLOSE, self.onclose)
         self.taskBarIcon = TaskBarIcon(self)
         self.SetMinSize((570,380))
         self.SetMaxSize((570,380))
@@ -116,11 +136,11 @@ class Gateway(wx.Frame):
         except:
             pass
 
-    def OnIconfiy(self, event):
+    def oniconfiy(self, event):
         self.Hide()
         event.Skip()
 
-    def OnClose(self, event):
+    def onclose(self, event):
         if is_logined == 1:
             self.showanser(u"请先注销账号，再关闭程序！")
         else:
@@ -194,17 +214,17 @@ class Gateway(wx.Frame):
             self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
-        except:
+        except Exception,e:
             self.timer.Stop()
-            self.showanser(self.othererror())
+            self.showanser(self.othererror(e))
     def sendback(self,event):
         webopen("mailto:labrusca@live.com")
     def openpage(self,event):
         webopen("http://account.njupt.edu.cn")
-    def othererror(self):
-        return "UNKONW ERROR,please wait for next verion."
+    def othererror(self,errorprint):
+        return "UNKONW ERROR:%s,please wait for next verion." % errorprint
     def showanser(self,n):
-        dialog=wx.MessageDialog(None,n,'ANSWER',wx.YES_DEFAULT|wx.ICON_INFORMATION)
+        dialog=wx.MessageDialog(None,n,'提示',wx.YES_DEFAULT|wx.ICON_INFORMATION)
         result=dialog.ShowModal()
         if result==wx.ID_YES:
             dialog.Destroy()
@@ -216,7 +236,7 @@ def turn_num(ID):
     data = urlencode({'key':ID })   
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = HTTPConnection('my.njupt.edu.cn',timeout=10)
+    conn = httplib.HTTPConnection('my.njupt.edu.cn',timeout=10)
     conn.request('POST', '/ccs/main/searchUser.do', data, headers)
     httpres = conn.getresponse()
     if httpres.status == 200:
