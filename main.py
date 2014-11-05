@@ -129,7 +129,7 @@ class Gateway(wx.Frame):
         #上次未注销时，执行：
         try:
             is_notlogout = search_info()
-            if is_notlogout[0] != "超时":
+            if is_notlogout[0] != "-1":
                 self.loginbutton.Enable(False)
                 self.logoutbutton.Enable(True)
                 self.timer.Start(1000)
@@ -228,8 +228,6 @@ class Gateway(wx.Frame):
         result=dialog.ShowModal()
         if result==wx.ID_YES:
             dialog.Destroy()
-        else:
-            pass
         dialog.Destroy()
 
 def turn_num(ID): 
@@ -333,7 +331,7 @@ def search_info():
         response = urllib2.urlopen("http://account.njupt.edu.cn")
         t = [0,0,0]
     except urllib2.URLError:
-        t=["超时","超时","超时"]
+        t=["-1","-1","-1"]   # -1表示超时。无法获取数据
         return t
     rsp = response.read()
     t[0] = findall(r"time=\'(\d+)", rsp)[0]
