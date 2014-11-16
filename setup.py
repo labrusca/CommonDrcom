@@ -14,9 +14,9 @@ options = {"py2exe":
 }
 
 setup(
-    version = "4.5",
+    version = "4.5.1",
     description = "NUPT Dr.com Loginer",
-    name = "Loginer",
+    name = "南京邮电大学Dr.com客户端",
     data_files=[('', ['logo.dll', 'T.dll'])],
     windows=[{"script": "main.py", "icon_resources": [(1,"T.dll")] }],
     options=options,

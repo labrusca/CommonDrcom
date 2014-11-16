@@ -70,7 +70,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 class Gateway(wx.Frame):
     "class for gateway"
     def __init__(self):
-        self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证系统",\
+        self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证客户端",\
                    pos=(250,200),size=(570,380),style=wx.MINIMIZE_BOX|wx.CAPTION|wx.CLOSE_BOX)
         panel=wx.Panel(self,-1)  
         self.timer = wx.Timer(self)
@@ -160,7 +160,7 @@ class Gateway(wx.Frame):
                 newline1 = turn_num(line1)
                 ans=login(newline1,line2,force=self.force.GetValue())
             except socket.gaierror:
-                self.showanser(u"网络中心无响应，尝试用校园卡方式登陆！")
+                self.showanser(u"网络中心无响应，请尝试用校园卡方式登陆！")
                 return 0
             except IndexError:
                 self.showanser(u"非法输入，请检查用户名和密码")
@@ -234,7 +234,7 @@ def turn_num(ID):
     data = urlencode({'key':ID })   
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = httplib.HTTPConnection('my.njupt.edu.cn',timeout=10)
+    conn = httplib.HTTPConnection('my.njupt.edu.cn',timeout=5)
     conn.request('POST', '/ccs/main/searchUser.do', data, headers)
     httpres = conn.getresponse()
     if httpres.status == 200:
@@ -257,7 +257,7 @@ def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
      else:
          req=urllib2.Request(url, data)   #请求响应
      try:
-         response = urllib2.urlopen(req, data,timeout=10) #获得响应
+         response = urllib2.urlopen(req, data,timeout=5) #获得响应
      except urllib2.URLError:
          return u"登陆超时，请重试！"
      except httplib.BadStatusLine:
@@ -302,7 +302,7 @@ def calpwd(init_pwd):   #使用md5进行密码转换
 
 def logout():
     try:
-        response = urllib2.urlopen("http://account.njupt.edu.cn/F.htm",timeout=10)
+        response = urllib2.urlopen("http://account.njupt.edu.cn/F.htm",timeout=5)
     except urllib2.URLError:
         return u"注销失败，网络无响应！"
     except httplib.BadStatusLine:
@@ -310,7 +310,7 @@ def logout():
     rsp = response.read()
     temp = findall(r"Msg=(\d+)", rsp)[0]
     if temp == "01":
-        response = urllib2.urlopen("http://192.168.168.168/F.htm")     #用account.njupt.edu.cn出错，改为内网IP地址
+        response = urllib2.urlopen("http://192.168.168.168/F.htm",timeout=5)     #用account.njupt.edu.cn出错，改为内网IP地址
         rsp = response.read()
         logouterror = findall(r"msga=\'(.+)\'", rsp)[0]
         return logouterror
@@ -328,7 +328,7 @@ def decrypt(s):    #WTF?!
 
 def search_info():
     try:
-        response = urllib2.urlopen("http://account.njupt.edu.cn")
+        response = urllib2.urlopen("http://account.njupt.edu.cn",timeout=5)
         t = [0,0,0]
     except urllib2.URLError:
         t=["-1","-1","-1"]   # -1表示超时。无法获取数据
