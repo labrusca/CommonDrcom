@@ -1,0 +1,9 @@
+('C:\\Users\\U100GT\\Desktop\\pyinstaller-develop\\main\\build\\main\\main.exe',
+ False,
+ False,
+ 't.ico',
+ None,
+ [],
+ None,
+ False,
+ 1416997113L)

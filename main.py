@@ -23,40 +23,67 @@ import time
 import socket
 import urllib2
 import httplib
+import sqlite3
 import wx,re
 from webbrowser import open as webopen
 from urllib import urlencode
 from hashlib import md5
 from re import findall
+#img2py made
+import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
 
-is_logined = 0 #已登陆标记
+versioninfo = "5.0.0-beta"
 
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
     closeme = wx.NewId()
     updateme = wx.NewId()
+    pubinfo = wx.NewId()
     def __init__(self, frame):
         wx.TaskBarIcon.__init__(self)
         self.frame = frame
-        self.SetIcon(wx.Icon(name='T.dll', type=wx.BITMAP_TYPE_ICO), '南京邮电大学Dr.com认证系统')
+        self.SetIcon(T.get_Icon(), '南京邮电大学Dr.com认证系统')
         self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.on_taskbar_leftdown)
         self.Bind(wx.EVT_MENU, self.func_updateme, id=self.updateme)
         self.Bind(wx.EVT_MENU, self.func_aboutme, id=self.aboutme)
         self.Bind(wx.EVT_MENU, self.func_closeme, id=self.closeme)
+        self.Bind(wx.EVT_MENU, self.func_pubinfo, id=self.pubinfo)
 
     def func_updateme(self,event):
-        webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer.git")
+        update_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/update",timeout=5)
+        mustupdate_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/ismusttoupdate",timeout=5)
+        updateinfo_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/updateinfo",timeout=5)
+        update_rsp = update_response.read()
+        mustupdate_rsp = mustupdate_response.read()
+        updateinfo_rsp = updateinfo_response.read()
+        if update_rsp != versioninfo:
+            if mustupdate_rsp == "yes":
+                dialog = wx.MessageDialog(None,"检测到新版本 %s，此次更新内容：\n%s\n此次更新为强制升级，请下载升级！" % (update_rsp,updateinfo_rsp),'升级',wx.YES_DEFAULT|wx.ICON_INFORMATION)
+            else:
+                dialog = wx.MessageDialog(None,"检测到新版本 %s，此次更新内容：\n%s\n是否升级？" % (update_rsp,updateinfo_rsp),'升级',wx.YES_NO|wx.ICON_INFORMATION)
+            result=dialog.ShowModal()
+            if result == wx.ID_NO:
+                dialog.Destroy()
+            elif result == wx.ID_YES:
+                webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer/repository/archive?ref=%s" % update_response)
+            dialog.Destroy()
+
+    def func_pubinfo(self,event):
+        info_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/information",timeout=5)
+        info_rsp = info_response.read()
+        wx.MessageBox(info_rsp, '服务器公告区')
 
     def func_aboutme(self, event):
-        wx.MessageBox('此程序遵循Apache V2.0协议开源，托管于开源中国Git@OSC仓库\n作者：labrusca', '关于')
+        wx.MessageBox('此程序遵循Apache V2.0协议开源，托管于开源中国Git@OSC仓库\n版本信息：%s\n作者：labrusca' % versioninfo, '关于')
 
     def func_closeme(self,event):
         self.frame.Close()
 
     def  CreatePopupMenu(self):
         menu = wx.Menu()
-        menu.Append(self.updateme, '获取新版请访问仓库')
+        menu.Append(self.updateme, '检测更新')
+        menu.Append(self.pubinfo, '查看服务器公告')
         menu.Append(self.aboutme, '关于')
         menu.Append(self.closeme, '退出')
         return menu
@@ -71,32 +98,34 @@ class Gateway(wx.Frame):
     "class for gateway"
     def __init__(self):
         self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证客户端",\
-                   pos=(250,200),size=(570,380),style=wx.MINIMIZE_BOX|wx.CAPTION|wx.CLOSE_BOX)
+                   pos=(250,200),size=(570,400),style=wx.MINIMIZE_BOX|wx.CAPTION|wx.CLOSE_BOX)
         panel=wx.Panel(self,-1)  
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateinfo, self.timer)
         self.Bind(wx.EVT_ICONIZE, self.oniconfiy)
         self.Bind(wx.EVT_CLOSE, self.onclose)
         self.taskBarIcon = TaskBarIcon(self)
-        self.SetMinSize((570,380))
-        self.SetMaxSize((570,380))
-        imge = wx.Icon('logo.dll', wx.BITMAP_TYPE_JPEG)
-        self.SetIcon(imge)
-        #get memory from config or initial cofig
+        self.SetMinSize((570,400))
+        self.SetMaxSize((570,400))
+        self.SetIcon(T.get_Icon())
+        #create DB or get memory from DB
+        conn = sqlite3.connect('save.db')
+        curs = conn.cursor()
         try:
-            f=open("Save.configfile",'r')
-        except IOError:
-            f=open("Save.configfile",'w')
-            f.write("emansru\ndwssap")
-            f.close()  #写操作具有自动创建文件功能
-            f=open("Save.configfile",'r')
+            curs.execute('CREATE TABLE account (username VARCHAR(20), password VARCHAR(20))')
+            curs.execute('INSERT INTO account (username, password) VALUES("emanresu","drowssap")')
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+        curs.execute('SELECT * FROM account')
+        acc = curs.fetchall()
         #解密
-        line1 = decrypt(f.readline())
-        line2 = decrypt(f.readline())
-        f.close()
+        line1 = decrypt(acc[0][0])
+        line2 = decrypt(acc[0][1])
+        curs.close()
+        conn.close()
         #UI
-        img1 = wx.Image('logo.dll', wx.BITMAP_TYPE_ANY)
-        wx.StaticBitmap(panel,-1,wx.BitmapFromImage(img1),pos=(325,10))
+        wx.StaticBitmap(panel,-1,wx.BitmapFromImage(logo.getjpg()),pos=(325,10))
         panel.SetBackgroundColour('#FFFFFF')
         font=wx.Font(14,wx.DEFAULT,wx.NORMAL,wx.NORMAL)
         font2=wx.Font(12,wx.DEFAULT,wx.NORMAL,wx.NORMAL)
@@ -122,6 +151,12 @@ class Gateway(wx.Frame):
         self.UsedTime=wx.StaticText(panel,-1,"已使用时间：未知",pos=(375,190))
         self.UsedFiux=wx.StaticText(panel,-1,"已使用流量：未知",pos=(375,210))
         self.Balance=wx.StaticText(panel,-1,"余额：未知",pos=(375,230))
+        self.sbar = self.CreateStatusBar()
+        self.SetMaxSize((570,400))
+        self.SetMinSize((570,400))
+        self.Center()
+        #self.sbar.SetBackgroundColour('#FFFFF0')
+        self.sbar.SetStatusText(versioninfo)
         updateinfo=wx.Button(panel,-1,u"弹出网页信息",pos=(5,280),size=(80,25))
         updateinfo.Bind(wx.EVT_BUTTON,self.openpage)
         sendback=wx.Button(panel,-1,u"联系作者",pos=(5,310),size=(80,25))
@@ -141,11 +176,9 @@ class Gateway(wx.Frame):
         event.Skip()
 
     def onclose(self, event):
-        if is_logined == 1:
-            self.showanser(u"请先注销账号，再关闭程序！")
-        else:
-            self.taskBarIcon.Destroy()
-            self.Destroy()
+        self.taskBarIcon.Destroy()
+        self.Destroy()
+
 
     #functions
     def loginfunc(self,event):
@@ -171,22 +204,26 @@ class Gateway(wx.Frame):
         elif self.radio_box.GetSelection() == 1:
             ans=login(line1,line2,force=self.force.GetValue())
         if ans == 1:
-            is_logined = 1
-            self.showanser(u"登陆成功")
+            self.sbar.SetBackgroundColour('#87CEFA')
+            self.sbar.SetStatusText('登陆成功！')
             self.loginbutton.Enable(False)
             self.logoutbutton.Enable(True)
             info = search_info()
             self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
+            self.taskBarIcon.func_updateme(self)
             self.timer.Start(1000)
         else:
             self.showanser(ans)
         if self.memo.GetValue():
-            f=open("Save.configfile",'w')
+            conn = sqlite3.connect('save.db')
+            curs = conn.cursor()
             #简单加密
-            f.write("%s\n%s"%(encrypt(line1),encrypt(line2)))
-            f.close()
+            curs.execute("update account set username='%s',password='%s'" % (encrypt(line1),encrypt(line2)))
+            conn.commit()
+            curs.close()
+            conn.close()
 
     def logoutfunc(self,event):
         self.timer.Stop()
@@ -201,8 +238,8 @@ class Gateway(wx.Frame):
             self.Balance.SetLabel("余额：无法获取数据")
         ans=logout()
         if ans =="14":
-            is_logined = 0
-            self.showanser(u"注销成功")
+            self.sbar.SetBackgroundColour('#FFFFF0')
+            self.sbar.SetStatusText('注销成功！')
         else:
             self.showanser(ans)
         self.loginbutton.Enable(True)
@@ -216,7 +253,15 @@ class Gateway(wx.Frame):
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
         except Exception,e:
             self.timer.Stop()
-            self.showanser(self.othererror(e))
+            self.sbar.SetBackgroundColour('RED')
+            self.sbar.SetStatusText(self.othererror(e))
+            #self.showanser(self.othererror(e))
+        if float(float(info[2])/10000) <=0.2:
+            self.sbar.SetBackgroundColour('#FFFF00')
+            self.sbar.SetStatusText('注意，余额已不足0.2元，预计使用时间不到一小时，请及时充值！')
+        else:
+            self.sbar.SetBackgroundColour('#87CEFA')
+            self.sbar.SetStatusText('已登陆')
     def sendback(self,event):
         webopen("mailto:labrusca@live.com")
     def openpage(self,event):
@@ -224,7 +269,7 @@ class Gateway(wx.Frame):
     def othererror(self,errorprint):
         return "UNKONW ERROR:%s,please wait for next verion." % errorprint
     def showanser(self,n):
-        dialog=wx.MessageDialog(None,n,'提示',wx.YES_DEFAULT|wx.ICON_INFORMATION)
+        dialog=wx.MessageDialog(None,n,'提示',wx.YES_DEFAULT|wx.ICON_ERROR)
         result=dialog.ShowModal()
         if result==wx.ID_YES:
             dialog.Destroy()
@@ -317,6 +362,7 @@ def logout():
     else:
         return temp
 
+#加解密功能，未来版本中修改
 def encrypt(s):
     f = ''
     for n in range(0,len(s)):

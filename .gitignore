@@ -1,2 +1,2 @@
-*.configfile
-dist/*.configfile
+﻿save.db
+dist/save.db
