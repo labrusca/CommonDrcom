@@ -33,7 +33,7 @@ from re import findall
 import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
 
-versioninfo = "5.0.0-t"
+versioninfo = "5.0.1"
 
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
