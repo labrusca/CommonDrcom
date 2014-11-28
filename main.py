@@ -66,7 +66,7 @@ class TaskBarIcon(wx.TaskBarIcon):
             if result == wx.ID_NO:
                 dialog.Destroy()
             elif result == wx.ID_YES:
-                webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer/repository/archive?ref=%s" % update_response)
+                webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer/repository/archive?ref=%s" % update_rsp)
             dialog.Destroy()
 
     def func_openpage(self,event):
