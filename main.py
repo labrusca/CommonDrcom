@@ -33,7 +33,7 @@ from re import findall
 import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
 
-versioninfo = "5.0.0-beta"
+versioninfo = "5.0.0"
 
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
@@ -48,7 +48,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_MENU, self.func_updateme, id=self.updateme)
         self.Bind(wx.EVT_MENU, self.func_aboutme, id=self.aboutme)
         self.Bind(wx.EVT_MENU, self.func_closeme, id=self.closeme)
-        self.Bind(wx.EVT_MENU, self.func_pubinfo, id=self.pubinfo)
+        self.Bind(wx.EVT_MENU, self.func_openpage, id=self.pubinfo)
 
     def func_updateme(self,event):
         update_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/update",timeout=5)
@@ -69,10 +69,8 @@ class TaskBarIcon(wx.TaskBarIcon):
                 webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer/repository/archive?ref=%s" % update_response)
             dialog.Destroy()
 
-    def func_pubinfo(self,event):
-        info_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/information",timeout=5)
-        info_rsp = info_response.read()
-        wx.MessageBox(info_rsp, '服务器公告区')
+    def func_openpage(self,event):
+        webopen("http://account.njupt.edu.cn")
 
     def func_aboutme(self, event):
         wx.MessageBox('此程序遵循Apache V2.0协议开源，托管于开源中国Git@OSC仓库\n版本信息：%s\n作者：labrusca' % versioninfo, '关于')
@@ -83,7 +81,7 @@ class TaskBarIcon(wx.TaskBarIcon):
     def  CreatePopupMenu(self):
         menu = wx.Menu()
         menu.Append(self.updateme, '检测更新')
-        menu.Append(self.pubinfo, '查看服务器公告')
+        menu.Append(self.pubinfo, '弹出网页版信息')
         menu.Append(self.aboutme, '关于')
         menu.Append(self.closeme, '退出')
         return menu
@@ -112,8 +110,8 @@ class Gateway(wx.Frame):
         conn = sqlite3.connect('save.db')
         curs = conn.cursor()
         try:
-            curs.execute('CREATE TABLE account (username VARCHAR(20), password VARCHAR(20))')
-            curs.execute('INSERT INTO account (username, password) VALUES("emanresu","drowssap")')
+            curs.execute('CREATE TABLE account (username VARCHAR(20), password VARCHAR(20), logintype INT)')
+            curs.execute('INSERT INTO account (username, password, logintype) VALUES("emanresu","drowssap",0)')
             conn.commit()
         except sqlite3.OperationalError:
             pass
@@ -122,8 +120,6 @@ class Gateway(wx.Frame):
         #解密
         line1 = decrypt(acc[0][0])
         line2 = decrypt(acc[0][1])
-        curs.close()
-        conn.close()
         #UI
         wx.StaticBitmap(panel,-1,wx.BitmapFromImage(logo.getjpg()),pos=(325,10))
         panel.SetBackgroundColour('#FFFFFF')
@@ -142,6 +138,16 @@ class Gateway(wx.Frame):
         self.force=wx.CheckBox(panel,-1,u"(账号正在使用时)强行登录",pos=(120,150),size=(240,30))
         self.force.SetFont(font2)
         self.radio_box = wx.RadioBox(panel,-1, "选择登陆方式",pos=(120,190),size=(240,60),choices=["学号", "校园卡"], majorDimension=0, style=wx.RA_SPECIFY_COLS)
+        #升级后的数据变动处理
+        try:
+            self.radio_box.SetSelection(acc[0][2])
+        except IndexError:
+            curs.execute('drop table account')
+            curs.execute('CREATE TABLE account (username VARCHAR(20), password VARCHAR(20), logintype INT)')
+            curs.execute('INSERT INTO account (username, password, logintype) VALUES("emanresu","drowssap",0)')
+            conn.commit()
+        curs.close()
+        conn.close()
         self.loginbutton=wx.Button(panel,-1,u"登录",pos=(150,280),size=(140,50))
         self.loginbutton.Bind(wx.EVT_BUTTON,self.loginfunc)
         self.logoutbutton=wx.Button(panel,-1,u"注销",pos=(320,280),size=(140,50))
@@ -157,8 +163,8 @@ class Gateway(wx.Frame):
         self.Center()
         #self.sbar.SetBackgroundColour('#FFFFF0')
         self.sbar.SetStatusText(versioninfo)
-        updateinfo=wx.Button(panel,-1,u"弹出网页信息",pos=(5,280),size=(80,25))
-        updateinfo.Bind(wx.EVT_BUTTON,self.openpage)
+        updateinfo=wx.Button(panel,-1,u"查看服务器公告",pos=(5,280),size=(100,25))
+        updateinfo.Bind(wx.EVT_BUTTON,self.pubinfo)
         sendback=wx.Button(panel,-1,u"联系作者",pos=(5,310),size=(80,25))
         sendback.Bind(wx.EVT_BUTTON,self.sendback)
         #上次未注销时，执行：
@@ -167,7 +173,7 @@ class Gateway(wx.Frame):
             if is_notlogout[0] != "-1":
                 self.loginbutton.Enable(False)
                 self.logoutbutton.Enable(True)
-                self.timer.Start(1000)
+                self.timer.Start(3000)
         except:
             pass
 
@@ -213,14 +219,14 @@ class Gateway(wx.Frame):
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
             self.taskBarIcon.func_updateme(self)
-            self.timer.Start(1000)
+            self.timer.Start(3000)
         else:
             self.showanser(ans)
         if self.memo.GetValue():
             conn = sqlite3.connect('save.db')
             curs = conn.cursor()
             #简单加密
-            curs.execute("update account set username='%s',password='%s'" % (encrypt(line1),encrypt(line2)))
+            curs.execute("update account set username='%s',password='%s',logintype='%d'" % (encrypt(line1),encrypt(line2),self.radio_box.GetSelection()))
             conn.commit()
             curs.close()
             conn.close()
@@ -251,21 +257,23 @@ class Gateway(wx.Frame):
             self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
+            if float(float(info[2])/10000) <=0.2:
+                self.sbar.SetBackgroundColour('#FFFF00')
+                self.sbar.SetStatusText('注意，余额已不足0.2元，预计使用时间不到一小时，请及时充值！')
+            else:
+                self.sbar.SetBackgroundColour('#87CEFA')
+                self.sbar.SetStatusText('已登陆')
         except Exception,e:
             self.timer.Stop()
             self.sbar.SetBackgroundColour('RED')
             self.sbar.SetStatusText(self.othererror(e))
             #self.showanser(self.othererror(e))
-        if float(float(info[2])/10000) <=0.2:
-            self.sbar.SetBackgroundColour('#FFFF00')
-            self.sbar.SetStatusText('注意，余额已不足0.2元，预计使用时间不到一小时，请及时充值！')
-        else:
-            self.sbar.SetBackgroundColour('#87CEFA')
-            self.sbar.SetStatusText('已登陆')
     def sendback(self,event):
         webopen("mailto:labrusca@live.com")
-    def openpage(self,event):
-        webopen("http://account.njupt.edu.cn")
+    def pubinfo(self,event):
+        info_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/information",timeout=5)
+        info_rsp = info_response.read()
+        wx.MessageBox(info_rsp, '服务器公告区')
     def othererror(self,errorprint):
         return "UNKONW ERROR:%s,please wait for next verion." % errorprint
     def showanser(self,n):
@@ -374,7 +382,7 @@ def decrypt(s):    #WTF?!
 
 def search_info():
     try:
-        response = urllib2.urlopen("http://account.njupt.edu.cn",timeout=5)
+        response = urllib2.urlopen("http://account.njupt.edu.cn",timeout=8)
         t = [0,0,0]
     except urllib2.URLError:
         t=["-1","-1","-1"]   # -1表示超时。无法获取数据
