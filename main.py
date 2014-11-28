@@ -33,7 +33,7 @@ from re import findall
 import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
 
-versioninfo = "5.0.0"
+versioninfo = "5.0.0-t"
 
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
@@ -65,7 +65,7 @@ class TaskBarIcon(wx.TaskBarIcon):
             result=dialog.ShowModal()
             if result == wx.ID_NO:
                 dialog.Destroy()
-            elif result == wx.ID_YES:
+            else:
                 webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer/repository/archive?ref=%s" % update_rsp)
             dialog.Destroy()
 
