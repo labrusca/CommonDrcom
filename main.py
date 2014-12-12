@@ -33,7 +33,7 @@ from re import findall
 import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
 
-versioninfo = "5.0.1"
+versioninfo = "5.0.2"
 
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
@@ -51,9 +51,13 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_MENU, self.func_openpage, id=self.pubinfo)
 
     def func_updateme(self,event):
-        update_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/update",timeout=5)
-        mustupdate_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/ismusttoupdate",timeout=5)
-        updateinfo_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/updateinfo",timeout=5)
+        try:
+            update_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/update",timeout=5)
+            mustupdate_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/ismusttoupdate",timeout=5)
+            updateinfo_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/updateinfo",timeout=5)
+        except urllib2.URLError:
+            t = Gateway()
+            t.showanser("网络错误，请检查网络设置。")
         update_rsp = update_response.read()
         mustupdate_rsp = mustupdate_response.read()
         updateinfo_rsp = updateinfo_response.read()
@@ -137,7 +141,7 @@ class Gateway(wx.Frame):
         self.memo.SetValue(1)
         self.force=wx.CheckBox(panel,-1,u"(账号正在使用时)强行登录",pos=(120,150),size=(240,30))
         self.force.SetFont(font2)
-        self.radio_box = wx.RadioBox(panel,-1, "选择登陆方式",pos=(120,190),size=(240,60),choices=["学号", "校园卡"], majorDimension=0, style=wx.RA_SPECIFY_COLS)
+        self.radio_box = wx.RadioBox(panel,-1, "选择登陆方式",pos=(120,190),size=(240,60),choices=["学号/工号", "校园卡号"], majorDimension=0, style=wx.RA_SPECIFY_COLS)
         #升级后的数据变动处理
         try:
             self.radio_box.SetSelection(acc[0][2])
@@ -199,7 +203,7 @@ class Gateway(wx.Frame):
                 newline1 = turn_num(line1)
                 ans=login(newline1,line2,force=self.force.GetValue())
             except socket.gaierror:
-                self.showanser(u"网络中心无响应，请尝试用校园卡方式登陆！")
+                self.showanser(u"网络中心无响应，请尝试用校园卡号登陆！")
                 return 0
             except IndexError:
                 self.showanser(u"非法输入，请检查用户名和密码")
@@ -257,22 +261,25 @@ class Gateway(wx.Frame):
             self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
-            if float(float(info[2])/10000) <=0.2:
+            if 0< float(float(info[2])/10000) <=0.2:
                 self.sbar.SetBackgroundColour('#FFFF00')
                 self.sbar.SetStatusText('注意，余额已不足0.2元，预计使用时间不到一小时，请及时充值！')
             else:
                 self.sbar.SetBackgroundColour('#87CEFA')
                 self.sbar.SetStatusText('已登陆')
-        except Exception,e:
+        except IndexError:
+            self.showanser("数据更新失败，你可能已下线！")
             self.timer.Stop()
             self.sbar.SetBackgroundColour('RED')
-            self.sbar.SetStatusText(self.othererror(e))
-            #self.showanser(self.othererror(e))
+            self.sbar.SetStatusText("获取数据失败！请检查网络设置。")
     def sendback(self,event):
         webopen("mailto:labrusca@live.com")
     def pubinfo(self,event):
-        info_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/information",timeout=5)
-        info_rsp = info_response.read()
+        try:
+            info_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/information",timeout=5)
+            info_rsp = info_response.read()
+        except urllib2.URLError:
+            self.showanser("服务器无响应，请检查网络设置。")
         wx.MessageBox(info_rsp, '服务器公告区')
     def othererror(self,errorprint):
         return "UNKONW ERROR:%s,please wait for next verion." % errorprint
@@ -293,7 +300,8 @@ def turn_num(ID):
     if httpres.status == 200:
         deal = httpres.read()
         pat = '[0-9]+'
-        return re.findall(pat,deal)[1]
+        if re.findall(pat,deal)[1] != "":
+            return re.findall(pat,deal)[1]
 
 #passwd is stringed
 def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
@@ -383,11 +391,17 @@ def decrypt(s):    #WTF?!
 def search_info():
     try:
         response = urllib2.urlopen("http://account.njupt.edu.cn",timeout=8)
+        rsp = response.read()
         t = [0,0,0]
     except urllib2.URLError:
         t=["-1","-1","-1"]   # -1表示超时。无法获取数据
         return t
-    rsp = response.read()
+    except httplib.BadStatusLine:
+        t=["-2","-2","-2"]
+        return t
+    except socket.timeout:
+        t=["-3","-3","-3"]
+        return t
     t[0] = findall(r"time=\'(\d+)", rsp)[0]
     t[1] = findall(r"flow=\'(\d+)", rsp)[0]
     t[2] = findall(r"fee=\'(\d+)", rsp)[0]
