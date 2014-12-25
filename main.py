@@ -24,6 +24,7 @@ import socket
 import urllib2
 import httplib
 import sqlite3
+import base64
 import wx,re
 from webbrowser import open as webopen
 from urllib import urlencode
@@ -33,7 +34,7 @@ from re import findall
 import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
 
-versioninfo = "5.0.2"
+versioninfo = "5.0.3"
 
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
@@ -261,26 +262,29 @@ class Gateway(wx.Frame):
             self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
-            if 0< float(float(info[2])/10000) <=0.2:
+            if 0 <float(float(info[2])/10000) <=0.2 :
                 self.sbar.SetBackgroundColour('#FFFF00')
                 self.sbar.SetStatusText('注意，余额已不足0.2元，预计使用时间不到一小时，请及时充值！')
-            else:
-                self.sbar.SetBackgroundColour('#87CEFA')
-                self.sbar.SetStatusText('已登陆')
+            elif int(info[0]) <0:
+                raise IndexError
         except IndexError:
-            self.showanser("数据更新失败，你可能已下线！")
             self.timer.Stop()
+            self.showanser("数据更新失败，你可能已下线！")
             self.sbar.SetBackgroundColour('RED')
             self.sbar.SetStatusText("获取数据失败！请检查网络设置。")
+        else:
+            self.sbar.SetBackgroundColour('#87CEFA')
+            self.sbar.SetStatusText('已登陆')
+
     def sendback(self,event):
         webopen("mailto:labrusca@live.com")
     def pubinfo(self,event):
         try:
             info_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/information",timeout=5)
             info_rsp = info_response.read()
+            wx.MessageBox(info_rsp, '服务器公告区')
         except urllib2.URLError:
             self.showanser("服务器无响应，请检查网络设置。")
-        wx.MessageBox(info_rsp, '服务器公告区')
     def othererror(self,errorprint):
         return "UNKONW ERROR:%s,please wait for next verion." % errorprint
     def showanser(self,n):
@@ -380,13 +384,17 @@ def logout():
 
 #加解密功能，未来版本中修改
 def encrypt(s):
-    f = ''
-    for n in range(0,len(s)):
-        f = s[::-1]
-    return f
+    return base64.encodestring(s)
 
-def decrypt(s):    #WTF?!
-    return encrypt(s)
+def decrypt(s):
+    try:
+        return base64.decodestring(s)
+    #软件升级过渡代码
+    except :
+        f = ''
+        for n in range(0,len(s)):
+            f = s[::-1]
+        return f
 
 def search_info():
     try:
