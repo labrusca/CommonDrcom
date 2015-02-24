@@ -2,7 +2,7 @@
 #__author__="Labrusca"
 
 '''
-Copyright 2014 labrusca
+Copyright 2015 labrusca
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ from re import findall
 import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
 
-versioninfo = "5.0.3"
+versioninfo = "5.0.4-alpha"
 
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
@@ -59,33 +59,36 @@ class TaskBarIcon(wx.TaskBarIcon):
         except urllib2.URLError:
             t = Gateway()
             t.showanser("网络错误，请检查网络设置。")
-        update_rsp = update_response.read()
-        mustupdate_rsp = mustupdate_response.read()
-        updateinfo_rsp = updateinfo_response.read()
-        if update_rsp != versioninfo:
-            if mustupdate_rsp == "yes":
-                dialog = wx.MessageDialog(None,"检测到新版本 %s，此次更新内容：\n%s\n此次更新为强制升级，请下载升级！" % (update_rsp,updateinfo_rsp),'升级',wx.YES_DEFAULT|wx.ICON_INFORMATION)
-            else:
-                dialog = wx.MessageDialog(None,"检测到新版本 %s，此次更新内容：\n%s\n是否升级？" % (update_rsp,updateinfo_rsp),'升级',wx.YES_NO|wx.ICON_INFORMATION)
-            result=dialog.ShowModal()
-            if result == wx.ID_NO:
+        else:
+            update_rsp = update_response.read()
+            mustupdate_rsp = mustupdate_response.read()
+            updateinfo_rsp = updateinfo_response.read()
+            if update_rsp != versioninfo:
+                if mustupdate_rsp == "yes":
+                    dialog = wx.MessageDialog(None,"检测到新版本 %s，此次更新内容：\n%s\n此次更新为强制升级，请下载升级！" % (update_rsp,updateinfo_rsp),'升级',wx.YES_DEFAULT|wx.ICON_INFORMATION)
+                elif mustupdate_rsp == "no":
+                    dialog = wx.MessageDialog(None,"检测到新版本 %s，此次更新内容：\n%s\n是否升级？" % (update_rsp,updateinfo_rsp),'升级',wx.YES_NO|wx.ICON_INFORMATION)
+                elif mustupdate_rsp == "new":
+                    dialog = wx.MessageDialog(None,"此软件已无限期停止更新与维护，但本人不会止步于此:\n新架构、新技术、新UI、新设计，让你得到全新体验——nw.js版Dr.com客户端，建议下载！",'获取nw.js版Dr.com客户端',wx.YES_NO|wx.ICON_INFORMATION)
+                    result=dialog.ShowModal()
+                if result == wx.ID_NO:
+                    dialog.Destroy()
+                else:
+                    webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer/repository/archive?ref=%s" % update_rsp)
                 dialog.Destroy()
-            else:
-                webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer/repository/archive?ref=%s" % update_rsp)
-            dialog.Destroy()
 
     def func_openpage(self,event):
         webopen("http://account.njupt.edu.cn")
 
     def func_aboutme(self, event):
-        wx.MessageBox('此程序遵循Apache V2.0协议开源，托管于开源中国Git@OSC仓库\n版本信息：%s\n作者：labrusca' % versioninfo, '关于')
+        wx.MessageBox('此程序遵循Apache V2.0协议开源，托管于开源中国Git@OSC仓库\n版本信息：%s\n此版本为最终版，以后不再更新。\n作者：labrusca' % versioninfo, '关于')
 
     def func_closeme(self,event):
         self.frame.Close()
 
     def  CreatePopupMenu(self):
         menu = wx.Menu()
-        menu.Append(self.updateme, '检测更新')
+        menu.Append(self.updateme, '获取nw.js版Dr.com客户端')
         menu.Append(self.pubinfo, '弹出网页版信息')
         menu.Append(self.aboutme, '关于')
         menu.Append(self.closeme, '退出')
@@ -100,7 +103,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 class Gateway(wx.Frame):
     "class for gateway"
     def __init__(self):
-        self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证客户端",\
+        self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证客户端(最终版)",\
                    pos=(250,200),size=(570,400),style=wx.MINIMIZE_BOX|wx.CAPTION|wx.CLOSE_BOX)
         panel=wx.Panel(self,-1)  
         self.timer = wx.Timer(self)
@@ -111,7 +114,6 @@ class Gateway(wx.Frame):
         self.SetMinSize((570,400))
         self.SetMaxSize((570,400))
         self.SetIcon(T.get_Icon())
-        #create DB or get memory from DB
         conn = sqlite3.connect('save.db')
         curs = conn.cursor()
         try:
@@ -166,7 +168,6 @@ class Gateway(wx.Frame):
         self.SetMaxSize((570,400))
         self.SetMinSize((570,400))
         self.Center()
-        #self.sbar.SetBackgroundColour('#FFFFF0')
         self.sbar.SetStatusText(versioninfo)
         updateinfo=wx.Button(panel,-1,u"查看服务器公告",pos=(5,280),size=(100,25))
         updateinfo.Bind(wx.EVT_BUTTON,self.pubinfo)
@@ -230,7 +231,6 @@ class Gateway(wx.Frame):
         if self.memo.GetValue():
             conn = sqlite3.connect('save.db')
             curs = conn.cursor()
-            #简单加密
             curs.execute("update account set username='%s',password='%s',logintype='%d'" % (encrypt(line1),encrypt(line2),self.radio_box.GetSelection()))
             conn.commit()
             curs.close()
@@ -339,9 +339,9 @@ def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
                  elif errormsga =="error1":
                      return u"本账号不允许Web方式登录"
                  else:
-                     return u"未知错误，错误号：%s." % errormsga
+                     return u"未知错误，错误代码：%s." % errormsga
              else:
-                 return u"账号或密码不对，请重新输入"
+                 return u"登陆失败！请先确认账号及密码的正确性。"
          elif temp =="02":
              xip = findall(r"xip=\'(\d+)\.(\d+)\.(\d+).(\d+)\.\'", rsp)[0]
              return u"该账号正在使用中，IP地址：%s" % xip
@@ -360,9 +360,7 @@ def calpwd(init_pwd):   #使用md5进行密码转换
      pid = '1'
      calg='12345678'
      tmp = pid + init_pwd + calg
-     #print "tmp=",tmp
      pwd = md5(tmp).hexdigest() + calg + pid
-     #print "pwd=",pwd
      return pwd 
 
 def logout():
@@ -391,9 +389,7 @@ def decrypt(s):
         return base64.decodestring(s)
     #软件升级过渡代码
     except :
-        f = ''
-        for n in range(0,len(s)):
-            f = s[::-1]
+        f = s[::-1]
         return f
 
 def search_info():
