@@ -18,7 +18,7 @@ setup(
     description = "NUPT_Dr.comLoginer",
     name = "南京邮电大学Dr.(最终版)",
     #data_files=[('', ['logo.dll', 'T.dll'])],
-    windows=[{"script": "main.py", "icon_resources": [(1,"t.ico")] }],
+    windows=[{"script": "main.py","uac_info":"highestAvailable", "icon_resources": [(1,"t.ico")] }],
     options=options,
     zipfile=None
 )

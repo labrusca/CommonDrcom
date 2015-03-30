@@ -33,9 +33,9 @@ from re import findall
 #img2py made
 import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
+school_url = "http://account.njupt.edu.cn"
 
-versioninfo = "5.0.4-alpha"
-
+versioninfo = "5.0.4"
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
     closeme = wx.NewId()
@@ -53,12 +53,19 @@ class TaskBarIcon(wx.TaskBarIcon):
 
     def func_updateme(self,event):
         try:
-            update_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/update",timeout=5)
-            mustupdate_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/ismusttoupdate",timeout=5)
-            updateinfo_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/updateinfo",timeout=5)
+            update_req,mustupdate_req,updateinfo_req = urllib2.Request("http://drcomupdate.sinaapp.com/update"),urllib2.Request("http://drcomupdate.sinaapp.com/ismusttoupdate"),urllib2.Request("http://drcomupdate.sinaapp.com/updateinfo")
+            update_req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
+            mustupdate_req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
+            updateinfo_req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
+            update_response = urllib2.urlopen(update_req,timeout=8)
+            mustupdate_response = urllib2.urlopen(mustupdate_req,timeout=8)
+            updateinfo_response = urllib2.urlopen(updateinfo_req,timeout=8)
         except urllib2.URLError:
             t = Gateway()
             t.showanser("网络错误，请检查网络设置。")
+        except socket.timeout:
+            t = Gateway()
+            t.showanser("连接超时，请检查网络设置。")
         else:
             update_rsp = update_response.read()
             mustupdate_rsp = mustupdate_response.read()
@@ -70,7 +77,7 @@ class TaskBarIcon(wx.TaskBarIcon):
                     dialog = wx.MessageDialog(None,"检测到新版本 %s，此次更新内容：\n%s\n是否升级？" % (update_rsp,updateinfo_rsp),'升级',wx.YES_NO|wx.ICON_INFORMATION)
                 elif mustupdate_rsp == "new":
                     dialog = wx.MessageDialog(None,"此软件已无限期停止更新与维护，但本人不会止步于此:\n新架构、新技术、新UI、新设计，让你得到全新体验——nw.js版Dr.com客户端，建议下载！",'获取nw.js版Dr.com客户端',wx.YES_NO|wx.ICON_INFORMATION)
-                    result=dialog.ShowModal()
+                result=dialog.ShowModal()
                 if result == wx.ID_NO:
                     dialog.Destroy()
                 else:
@@ -78,10 +85,10 @@ class TaskBarIcon(wx.TaskBarIcon):
                 dialog.Destroy()
 
     def func_openpage(self,event):
-        webopen("http://account.njupt.edu.cn")
+        webopen(school_url)
 
     def func_aboutme(self, event):
-        wx.MessageBox('此程序遵循Apache V2.0协议开源，托管于开源中国Git@OSC仓库\n版本信息：%s\n此版本为最终版，以后不再更新。\n作者：labrusca' % versioninfo, '关于')
+        wx.MessageBox('此程序遵循Apache V2.0协议开源，托管于开源中国Git@OSC仓库\n版本信息：%s' % versioninfo, '关于')
 
     def func_closeme(self,event):
         self.frame.Close()
@@ -103,7 +110,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 class Gateway(wx.Frame):
     "class for gateway"
     def __init__(self):
-        self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证客户端(最终版)",\
+        self.Frame=wx.Frame.__init__(self,None,-1,"南京邮电大学校园网Dr.com认证客户端 %s" % versioninfo,\
                    pos=(250,200),size=(570,400),style=wx.MINIMIZE_BOX|wx.CAPTION|wx.CLOSE_BOX)
         panel=wx.Panel(self,-1)  
         self.timer = wx.Timer(self)
@@ -114,7 +121,7 @@ class Gateway(wx.Frame):
         self.SetMinSize((570,400))
         self.SetMaxSize((570,400))
         self.SetIcon(T.get_Icon())
-        conn = sqlite3.connect('save.db')
+        conn = sqlite3.connect('C:\\save.db')
         curs = conn.cursor()
         try:
             curs.execute('CREATE TABLE account (username VARCHAR(20), password VARCHAR(20), logintype INT)')
@@ -145,14 +152,7 @@ class Gateway(wx.Frame):
         self.force=wx.CheckBox(panel,-1,u"(账号正在使用时)强行登录",pos=(120,150),size=(240,30))
         self.force.SetFont(font2)
         self.radio_box = wx.RadioBox(panel,-1, "选择登陆方式",pos=(120,190),size=(240,60),choices=["学号/工号", "校园卡号"], majorDimension=0, style=wx.RA_SPECIFY_COLS)
-        #升级后的数据变动处理
-        try:
-            self.radio_box.SetSelection(acc[0][2])
-        except IndexError:
-            curs.execute('drop table account')
-            curs.execute('CREATE TABLE account (username VARCHAR(20), password VARCHAR(20), logintype INT)')
-            curs.execute('INSERT INTO account (username, password, logintype) VALUES("emanresu","drowssap",0)')
-            conn.commit()
+        self.radio_box.SetSelection(acc[0][2])
         curs.close()
         conn.close()
         self.loginbutton=wx.Button(panel,-1,u"登录",pos=(150,280),size=(140,50))
@@ -168,7 +168,7 @@ class Gateway(wx.Frame):
         self.SetMaxSize((570,400))
         self.SetMinSize((570,400))
         self.Center()
-        self.sbar.SetStatusText(versioninfo)
+        self.sbar.SetStatusText("用我登陆校园网，拉风又能萌萌哒~")
         updateinfo=wx.Button(panel,-1,u"查看服务器公告",pos=(5,280),size=(100,25))
         updateinfo.Bind(wx.EVT_BUTTON,self.pubinfo)
         sendback=wx.Button(panel,-1,u"联系作者",pos=(5,310),size=(80,25))
@@ -176,10 +176,9 @@ class Gateway(wx.Frame):
         #上次未注销时，执行：
         try:
             is_notlogout = search_info()
-            if is_notlogout[0] != "-1":
-                self.loginbutton.Enable(False)
-                self.logoutbutton.Enable(True)
-                self.timer.Start(3000)
+            self.loginbutton.Enable(False)
+            self.logoutbutton.Enable(True)
+            self.timer.Start(3000)
         except:
             pass
 
@@ -229,7 +228,7 @@ class Gateway(wx.Frame):
         else:
             self.showanser(ans)
         if self.memo.GetValue():
-            conn = sqlite3.connect('save.db')
+            conn = sqlite3.connect('C:\\save.db')
             curs = conn.cursor()
             curs.execute("update account set username='%s',password='%s',logintype='%d'" % (encrypt(line1),encrypt(line2),self.radio_box.GetSelection()))
             conn.commit()
@@ -259,22 +258,37 @@ class Gateway(wx.Frame):
     def updateinfo(self,event):
         try:
             info = search_info()
+        except IndexError:
+            self.timer.Stop()
+            self.loginbutton.Enable(True)
+            self.logoutbutton.Enable(False)
+            self.sbar.SetBackgroundColour('#FFFF00')
+            self.sbar.SetStatusText("你已下线。")
+            self.showanser("或因账户问题，账号已下线。")
+        except urllib2.URLError:
+            self.timer.Stop()
+            self.sbar.SetBackgroundColour('RED')
+            self.sbar.SetStatusText("数据更新失败，请检查网络设置！")
+            self.timer.Start(4000)
+        except httplib.BadStatusLine:
+            self.timer.Stop()
+            self.sbar.SetBackgroundColour('RED')
+            self.sbar.SetStatusText("服务器未返回数据！")
+            self.timer.Start(3000)
+        except socket.timeout:
+            self.timer.Stop()
+            self.sbar.SetBackgroundColour('RED')
+            self.sbar.SetStatusText("连接超时，请检查网络设置！")
+            self.timer.Start(4000)
+        else:
+            self.sbar.SetBackgroundColour('#87CEFA')
+            self.sbar.SetStatusText('已登陆')
             self.UsedTime.SetLabel("已使用时间：%d Min" % int(info[0]))
             self.UsedFiux.SetLabel("已使用流量：%.3f MByte" % float(float(info[1])/1024))
             self.Balance.SetLabel("余额：%.2f RMB" % float(float(info[2])/10000))
             if 0 <float(float(info[2])/10000) <=0.2 :
                 self.sbar.SetBackgroundColour('#FFFF00')
                 self.sbar.SetStatusText('注意，余额已不足0.2元，预计使用时间不到一小时，请及时充值！')
-            elif int(info[0]) <0:
-                raise IndexError
-        except IndexError:
-            self.timer.Stop()
-            self.showanser("数据更新失败，你可能已下线！")
-            self.sbar.SetBackgroundColour('RED')
-            self.sbar.SetStatusText("获取数据失败！请检查网络设置。")
-        else:
-            self.sbar.SetBackgroundColour('#87CEFA')
-            self.sbar.SetStatusText('已登陆')
 
     def sendback(self,event):
         webopen("mailto:labrusca@live.com")
@@ -308,7 +322,7 @@ def turn_num(ID):
             return re.findall(pat,deal)[1]
 
 #passwd is stringed
-def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
+def login(usr, passwd, url = school_url,force=0):
      data = {} # 初始化表单
      data["DDDDD"] = usr 
      data["upass"] = calpwd(passwd) #密码转换
@@ -322,6 +336,7 @@ def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
      else:
          req=urllib2.Request(url, data)   #请求响应
      try:
+         req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
          response = urllib2.urlopen(req, data,timeout=5) #获得响应
      except urllib2.URLError:
          return u"登陆超时，请重试！"
@@ -356,7 +371,7 @@ def login(usr, passwd, url = "http://account.njupt.edu.cn",force=0):
      else:
          return 1
    
-def calpwd(init_pwd):   #使用md5进行密码转换
+def calpwd(init_pwd):   #使用md5进行密码加密
      pid = '1'
      calg='12345678'
      tmp = pid + init_pwd + calg
@@ -365,7 +380,7 @@ def calpwd(init_pwd):   #使用md5进行密码转换
 
 def logout():
     try:
-        response = urllib2.urlopen("http://account.njupt.edu.cn/F.htm",timeout=5)
+        response = urllib2.urlopen(school_url + "/F.htm",timeout=5)
     except urllib2.URLError:
         return u"注销失败，网络无响应！"
     except httplib.BadStatusLine:
@@ -373,8 +388,6 @@ def logout():
     rsp = response.read()
     temp = findall(r"Msg=(\d+)", rsp)[0]
     if temp == "01":
-        response = urllib2.urlopen("http://192.168.168.168/F.htm",timeout=5)     #用account.njupt.edu.cn出错，改为内网IP地址
-        rsp = response.read()
         logouterror = findall(r"msga=\'(.+)\'", rsp)[0]
         return logouterror
     else:
@@ -385,27 +398,12 @@ def encrypt(s):
     return base64.encodestring(s)
 
 def decrypt(s):
-    try:
-        return base64.decodestring(s)
-    #软件升级过渡代码
-    except :
-        f = s[::-1]
-        return f
+    return base64.decodestring(s)
 
 def search_info():
-    try:
-        response = urllib2.urlopen("http://account.njupt.edu.cn",timeout=8)
-        rsp = response.read()
-        t = [0,0,0]
-    except urllib2.URLError:
-        t=["-1","-1","-1"]   # -1表示超时。无法获取数据
-        return t
-    except httplib.BadStatusLine:
-        t=["-2","-2","-2"]
-        return t
-    except socket.timeout:
-        t=["-3","-3","-3"]
-        return t
+    response = urllib2.urlopen(school_url,timeout=8)
+    rsp = response.read()
+    t = [0,0,0]
     t[0] = findall(r"time=\'(\d+)", rsp)[0]
     t[1] = findall(r"flow=\'(\d+)", rsp)[0]
     t[2] = findall(r"fee=\'(\d+)", rsp)[0]
