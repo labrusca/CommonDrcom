@@ -35,7 +35,7 @@ import T,logo
 retmp=re.compile('\w+')  #为了加速匹配
 school_url = "http://account.njupt.edu.cn"
 
-versioninfo = "5.0.4"
+versioninfo = "5.0.5"
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
     closeme = wx.NewId()
@@ -275,7 +275,7 @@ class Gateway(wx.Frame):
             self.sbar.SetBackgroundColour('RED')
             self.sbar.SetStatusText("服务器未返回数据！")
             self.timer.Start(3000)
-        except socket.timeout:
+        except (socket.timeout,socket.error,socket.gaierror):
             self.timer.Stop()
             self.sbar.SetBackgroundColour('RED')
             self.sbar.SetStatusText("连接超时，请检查网络设置！")
@@ -294,7 +294,9 @@ class Gateway(wx.Frame):
         webopen("mailto:labrusca@live.com")
     def pubinfo(self,event):
         try:
-            info_response = urllib2.urlopen("http://drcomupdate.sinaapp.com/information",timeout=5)
+            info_req = urllib2.Request("http://drcomupdate.sinaapp.com/information")
+            info_req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
+            info_response = urllib2.urlopen(info_req,timeout=5)
             info_rsp = info_response.read()
             wx.MessageBox(info_rsp, '服务器公告区')
         except urllib2.URLError:
@@ -338,11 +340,13 @@ def login(usr, passwd, url = school_url,force=0):
      try:
          req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
          response = urllib2.urlopen(req, data,timeout=5) #获得响应
+         rsp = response.read()
      except urllib2.URLError:
          return u"登陆超时，请重试！"
      except httplib.BadStatusLine:
          return u"服务器未返回数据！"
-     rsp = response.read()
+     except socket.timeout:
+         return u"连接错误，请重试！"
      temp = findall(r"You have successfully logged into our system.", rsp) #查询状态
      if not temp: #登录未成功
          temp = findall(r"Msg=(\d+)", rsp)[0]
@@ -381,11 +385,13 @@ def calpwd(init_pwd):   #使用md5进行密码加密
 def logout():
     try:
         response = urllib2.urlopen(school_url + "/F.htm",timeout=5)
+        rsp = response.read()
     except urllib2.URLError:
         return u"注销失败，网络无响应！"
     except httplib.BadStatusLine:
         return u"服务器未返回数据！"
-    rsp = response.read()
+    except socket.timeout:
+        return u"连接错误，请重试！"
     temp = findall(r"Msg=(\d+)", rsp)[0]
     if temp == "01":
         logouterror = findall(r"msga=\'(.+)\'", rsp)[0]

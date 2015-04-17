@@ -7,3 +7,5 @@
 
 由labrusca发起
 项目修改前只适用于南京邮电大学
+
+"python main.py" to run
