@@ -5,7 +5,8 @@
 
 程序发布遵循 Semantic Versioning 2.0.0 规范
 
-由labrusca发起
-项目修改前只适用于南京邮电大学
+由labrusca制作
+通用版Dr.com认证客户端，适用于各大采用Dr.com解决方案上网的高校
+PS：未进行编译运行测试
 
 "python main.py" to run

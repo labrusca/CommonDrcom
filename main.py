@@ -1,8 +1,8 @@
-#coding=GBK
+#-*-coding:utf-8 -*-
 #__author__="Labrusca"
 
 '''
-Copyright 2015 labrusca
+Copyright 2016 labrusca
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,73 +32,36 @@ from hashlib import md5
 from re import findall
 #img2py made
 import T,logo
-retmp=re.compile('\w+')  #ÎªÁË¼ÓËÙÆ¥Åä
-school_url = "http://account.njupt.edu.cn"
+retmp=re.compile('\w+')  #ä¸ºäº†åŠ é€ŸåŒ¹é…
 
-versioninfo = "5.0.5"
+versioninfo = "6.0.0-alpha"
 class TaskBarIcon(wx.TaskBarIcon):
     aboutme = wx.NewId()
     closeme = wx.NewId()
-    updateme = wx.NewId()
     pubinfo = wx.NewId()
     def __init__(self, frame):
         wx.TaskBarIcon.__init__(self)
         self.frame = frame
-        self.SetIcon(T.get_Icon(), 'ÄÏ¾©ÓÊµç´óÑ§Dr.comÈÏÖ¤ÏµÍ³')
+        self.SetIcon(T.get_Icon(), 'é€šç”¨ç‰ˆDr.comè®¤è¯ç³»ç»Ÿ')
         self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.on_taskbar_leftdown)
-        self.Bind(wx.EVT_MENU, self.func_updateme, id=self.updateme)
         self.Bind(wx.EVT_MENU, self.func_aboutme, id=self.aboutme)
         self.Bind(wx.EVT_MENU, self.func_closeme, id=self.closeme)
         self.Bind(wx.EVT_MENU, self.func_openpage, id=self.pubinfo)
-
-    def func_updateme(self,event):
-        try:
-            update_req,mustupdate_req,updateinfo_req = urllib2.Request("http://drcomupdate.sinaapp.com/update"),urllib2.Request("http://drcomupdate.sinaapp.com/ismusttoupdate"),urllib2.Request("http://drcomupdate.sinaapp.com/updateinfo")
-            update_req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
-            mustupdate_req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
-            updateinfo_req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
-            update_response = urllib2.urlopen(update_req,timeout=8)
-            mustupdate_response = urllib2.urlopen(mustupdate_req,timeout=8)
-            updateinfo_response = urllib2.urlopen(updateinfo_req,timeout=8)
-        except urllib2.URLError:
-            t = Gateway()
-            t.showanser("ÍøÂç´íÎó£¬Çë¼ì²éÍøÂçÉèÖÃ¡£")
-        except socket.timeout:
-            t = Gateway()
-            t.showanser("Á¬½Ó³¬Ê±£¬Çë¼ì²éÍøÂçÉèÖÃ¡£")
-        else:
-            update_rsp = update_response.read()
-            mustupdate_rsp = mustupdate_response.read()
-            updateinfo_rsp = updateinfo_response.read()
-            if update_rsp != versioninfo:
-                if mustupdate_rsp == "yes":
-                    dialog = wx.MessageDialog(None,"¼ì²âµ½ĞÂ°æ±¾ %s£¬´Ë´Î¸üĞÂÄÚÈİ£º\n%s\n´Ë´Î¸üĞÂÎªÇ¿ÖÆÉı¼¶£¬ÇëÏÂÔØÉı¼¶£¡" % (update_rsp,updateinfo_rsp),'Éı¼¶',wx.YES_DEFAULT|wx.ICON_INFORMATION)
-                elif mustupdate_rsp == "no":
-                    dialog = wx.MessageDialog(None,"¼ì²âµ½ĞÂ°æ±¾ %s£¬´Ë´Î¸üĞÂÄÚÈİ£º\n%s\nÊÇ·ñÉı¼¶£¿" % (update_rsp,updateinfo_rsp),'Éı¼¶',wx.YES_NO|wx.ICON_INFORMATION)
-                elif mustupdate_rsp == "new":
-                    dialog = wx.MessageDialog(None,"´ËÈí¼şÒÑÎŞÏŞÆÚÍ£Ö¹¸üĞÂÓëÎ¬»¤£¬µ«±¾ÈË²»»áÖ¹²½ÓÚ´Ë:\nĞÂ¼Ü¹¹¡¢ĞÂ¼¼Êõ¡¢ĞÂUI¡¢ĞÂÉè¼Æ£¬ÈÃÄãµÃµ½È«ĞÂÌåÑé¡ª¡ªnw.js°æDr.com¿Í»§¶Ë£¬½¨ÒéÏÂÔØ£¡",'»ñÈ¡nw.js°æDr.com¿Í»§¶Ë',wx.YES_NO|wx.ICON_INFORMATION)
-                result=dialog.ShowModal()
-                if result == wx.ID_NO:
-                    dialog.Destroy()
-                else:
-                    webopen("https://git.oschina.net/labrusca/NUPT_Drcom_loginer/repository/archive?ref=%s" % update_rsp)
-                dialog.Destroy()
 
     def func_openpage(self,event):
         webopen(school_url)
 
     def func_aboutme(self, event):
-        wx.MessageBox('´Ë³ÌĞò×ñÑ­Apache V2.0Ğ­Òé¿ªÔ´£¬ÍĞ¹ÜÓÚ¿ªÔ´ÖĞ¹úGit@OSC²Ö¿â\n°æ±¾ĞÅÏ¢£º%s' % versioninfo, '¹ØÓÚ')
+        wx.MessageBox('æ­¤ç¨‹åºéµå¾ªApache V2.0åè®®å¼€æºï¼Œæ‰˜ç®¡äºGithubä»“åº“\nç‰ˆæœ¬ä¿¡æ¯ï¼š%s' % versioninfo, 'å…³äº')
 
     def func_closeme(self,event):
         self.frame.Close()
 
-    def  CreatePopupMenu(self):
+    def CreatePopupMenu(self):
         menu = wx.Menu()
-        menu.Append(self.updateme, '»ñÈ¡nw.js°æDr.com¿Í»§¶Ë')
-        menu.Append(self.pubinfo, 'µ¯³öÍøÒ³°æĞÅÏ¢')
-        menu.Append(self.aboutme, '¹ØÓÚ')
-        menu.Append(self.closeme, 'ÍË³ö')
+        menu.Append(self.pubinfo, 'å¼¹å‡ºç½‘é¡µç‰ˆä¿¡æ¯')
+        menu.Append(self.aboutme, 'å…³äº')
+        menu.Append(self.closeme, 'é€€å‡º')
         return menu
     def on_taskbar_leftdown(self, event):
         if self.frame.IsIconized():
@@ -110,7 +73,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 class Gateway(wx.Frame):
     "class for gateway"
     def __init__(self):
-        self.Frame=wx.Frame.__init__(self,None,-1,"ÄÏ¾©ÓÊµç´óÑ§Ğ£Ô°ÍøDr.comÈÏÖ¤¿Í»§¶Ë %s" % versioninfo,\
+        self.Frame=wx.Frame.__init__(self,None,-1,"é€šç”¨ç‰ˆDr.comè®¤è¯å®¢æˆ·ç«¯ %s" % versioninfo,\
                    pos=(250,200),size=(570,400),style=wx.MINIMIZE_BOX|wx.CAPTION|wx.CLOSE_BOX)
         panel=wx.Panel(self,-1)  
         self.timer = wx.Timer(self)
@@ -125,13 +88,13 @@ class Gateway(wx.Frame):
         curs = conn.cursor()
         try:
             curs.execute('CREATE TABLE account (username VARCHAR(20), password VARCHAR(20), logintype INT)')
-            curs.execute('INSERT INTO account (username, password, logintype) VALUES("emanresu","drowssap",0)')
+            curs.execute('INSERT INTO account (username, password, s_url) VALUES("emanresu","drowssap","None")')
             conn.commit()
         except sqlite3.OperationalError:
             pass
         curs.execute('SELECT * FROM account')
         acc = curs.fetchall()
-        #½âÃÜ
+        #è§£å¯†
         line1 = decrypt(acc[0][0])
         line2 = decrypt(acc[0][1])
         #UI
@@ -140,42 +103,42 @@ class Gateway(wx.Frame):
         font=wx.Font(14,wx.DEFAULT,wx.NORMAL,wx.NORMAL)
         font2=wx.Font(12,wx.DEFAULT,wx.NORMAL,wx.NORMAL)
         style=wx.TextAttr(font=font)
-        user=wx.StaticText(panel,-1,u"ÓÃ»§Ãû£º",pos=(20,30)).SetFont(font)
-        password=wx.StaticText(panel,-1,u"  ÃÜÂë£º",pos=(20,70)).SetFont(font)
+        user=wx.StaticText(panel,-1,u"ç”¨æˆ·åï¼š",pos=(20,30)).SetFont(font)
+        password=wx.StaticText(panel,-1,u"  å¯†ç ï¼š",pos=(20,70)).SetFont(font)
         self.usrvalue=wx.TextCtrl(panel,-1,line1,pos=(120,30),size=(180,30))
         self.usrvalue.SetFont(font)
         self.passwdvalue=wx.TextCtrl(panel,-1,line2,pos=(120,70),size=(180,30),style=wx.PASSWORD)
         self.passwdvalue.SetFont(font)
-        self.memo=wx.CheckBox(panel,-1,u"×Ô¶¯±£´æ",pos=(120,120),size=(80,30))
+        self.memo=wx.CheckBox(panel,-1,u"è‡ªåŠ¨ä¿å­˜",pos=(120,120),size=(80,30))
         self.memo.SetFont(font2)
         self.memo.SetValue(1)
-        self.force=wx.CheckBox(panel,-1,u"(ÕËºÅÕıÔÚÊ¹ÓÃÊ±)Ç¿ĞĞµÇÂ¼",pos=(120,150),size=(240,30))
+        self.force=wx.CheckBox(panel,-1,u"(è´¦å·æ­£åœ¨ä½¿ç”¨æ—¶)å¼ºè¡Œç™»å½•",pos=(120,150),size=(240,30))
         self.force.SetFont(font2)
-        self.radio_box = wx.RadioBox(panel,-1, "Ñ¡ÔñµÇÂ½·½Ê½",pos=(120,190),size=(240,60),choices=["Ñ§ºÅ/¹¤ºÅ", "Ğ£Ô°¿¨ºÅ"], majorDimension=0, style=wx.RA_SPECIFY_COLS)
-        self.radio_box.SetSelection(acc[0][2])
+        s_url_text=wx.StaticText(panel,-1,u"å­¦æ ¡Dr.comç™»é™†åœ°å€ï¼š",pos=(120,190)).SetFont(font)
+        self.s_urlvalue=wx.TextCtrl(panel,-1,line2,pos=(120,220),size=(180,30),style=wx.PASSWORD)
+        self.s_urlvalue.SetFont(font)
+        #self.radio_box.SetSelection(acc[0][2])
         curs.close()
         conn.close()
-        self.loginbutton=wx.Button(panel,-1,u"µÇÂ¼",pos=(150,280),size=(140,50))
+        self.loginbutton=wx.Button(panel,-1,u"ç™»å½•",pos=(150,280),size=(140,50))
         self.loginbutton.Bind(wx.EVT_BUTTON,self.loginfunc)
-        self.logoutbutton=wx.Button(panel,-1,u"×¢Ïú",pos=(320,280),size=(140,50))
+        self.logoutbutton=wx.Button(panel,-1,u"æ³¨é”€",pos=(320,280),size=(140,50))
         self.logoutbutton.Bind(wx.EVT_BUTTON,self.logoutfunc)
         self.loginbutton.Enable(True)
         self.logoutbutton.Enable(False)
-        self.UsedTime=wx.StaticText(panel,-1,"ÒÑÊ¹ÓÃÊ±¼ä£ºÎ´Öª",pos=(375,190))
-        self.UsedFiux=wx.StaticText(panel,-1,"ÒÑÊ¹ÓÃÁ÷Á¿£ºÎ´Öª",pos=(375,210))
-        self.Balance=wx.StaticText(panel,-1,"Óà¶î£ºÎ´Öª",pos=(375,230))
+        self.UsedTime=wx.StaticText(panel,-1,"å·²ä½¿ç”¨æ—¶é—´ï¼šæœªçŸ¥",pos=(375,190))
+        self.UsedFiux=wx.StaticText(panel,-1,"å·²ä½¿ç”¨æµé‡ï¼šæœªçŸ¥",pos=(375,210))
+        self.Balance=wx.StaticText(panel,-1,"ä½™é¢ï¼šæœªçŸ¥",pos=(375,230))
         self.sbar = self.CreateStatusBar()
         self.SetMaxSize((570,400))
         self.SetMinSize((570,400))
         self.Center()
-        self.sbar.SetStatusText("ÓÃÎÒµÇÂ½Ğ£Ô°Íø£¬À­·çÓÖÄÜÃÈÃÈßÕ~")
-        updateinfo=wx.Button(panel,-1,u"²é¿´·şÎñÆ÷¹«¸æ",pos=(5,280),size=(100,25))
-        updateinfo.Bind(wx.EVT_BUTTON,self.pubinfo)
-        sendback=wx.Button(panel,-1,u"ÁªÏµ×÷Õß",pos=(5,310),size=(80,25))
+        self.sbar.SetStatusText("ç”¨æˆ‘ç™»é™†æ ¡å›­ç½‘ï¼Œæ‹‰é£åˆèƒ½èŒèŒå“’~")
+        sendback=wx.Button(panel,-1,u"è”ç³»ä½œè€…",pos=(5,310),size=(80,25))
         sendback.Bind(wx.EVT_BUTTON,self.sendback)
-        #ÉÏ´ÎÎ´×¢ÏúÊ±£¬Ö´ĞĞ£º
+        #ä¸Šæ¬¡æœªæ³¨é”€æ—¶ï¼Œæ‰§è¡Œï¼š
         try:
-            is_notlogout = search_info()
+            is_notlogout = search_info(self.s_urlvalue.GetValue())
             self.loginbutton.Enable(False)
             self.logoutbutton.Enable(True)
             self.timer.Start(3000)
@@ -197,32 +160,31 @@ class Gateway(wx.Frame):
             line1=re.search(retmp,self.usrvalue.GetValue()).group()
             line2=re.search(retmp,self.passwdvalue.GetValue()).group()
         except AttributeError:
-            self.showanser(u'ÊäÈë·Ç·¨')
+            self.showanser(u'è¾“å…¥éæ³•')
             return
-        if self.radio_box.GetSelection() == 0:
+        if self.s_urlvalue.GetValue():
             try:
-                newline1 = turn_num(line1)
-                ans=login(newline1,line2,force=self.force.GetValue())
+                ans=login(line1,line2,self.s_urlvalue.GetValue())
             except socket.gaierror:
-                self.showanser(u"ÍøÂçÖĞĞÄÎŞÏìÓ¦£¬Çë³¢ÊÔÓÃĞ£Ô°¿¨ºÅµÇÂ½£¡")
+                self.showanser(u"ç½‘ç»œä¸­å¿ƒæ— å“åº”ï¼Œè¯·å°è¯•ç”¨æ ¡å›­å¡å·ç™»é™†ï¼")
                 return 0
             except IndexError:
-                self.showanser(u"·Ç·¨ÊäÈë£¬Çë¼ì²éÓÃ»§ÃûºÍÃÜÂë")
+                self.showanser(u"éæ³•è¾“å…¥ï¼Œè¯·æ£€æŸ¥ç”¨æˆ·åå’Œå¯†ç ")
                 return 0
             except socket.timeout:
-                self.showanser(u"³¬Ê±£¬ÎŞ·¨Á¬½ÓÍøÂçÖĞĞÄ£¡")
+                self.showanser(u"è¶…æ—¶ï¼Œæ— æ³•è¿æ¥ç½‘ç»œä¸­å¿ƒï¼")
                 return 0
-        elif self.radio_box.GetSelection() == 1:
-            ans=login(line1,line2,force=self.force.GetValue())
+        else:
+            self.showanser(u"è¯·è¾“å…¥å­¦æ ¡Dr.comç™»é™†åœ°å€ï¼")
         if ans == 1:
             self.sbar.SetBackgroundColour('#87CEFA')
-            self.sbar.SetStatusText('µÇÂ½³É¹¦£¡')
+            self.sbar.SetStatusText('ç™»é™†æˆåŠŸï¼')
             self.loginbutton.Enable(False)
             self.logoutbutton.Enable(True)
-            info = search_info()
-            self.UsedTime.SetLabel("ÒÑÊ¹ÓÃÊ±¼ä£º%d Min" % int(info[0]))
-            self.UsedFiux.SetLabel("ÒÑÊ¹ÓÃÁ÷Á¿£º%.3f MByte" % float(float(info[1])/1024))
-            self.Balance.SetLabel("Óà¶î£º%.2f RMB" % float(float(info[2])/10000))
+            info = search_info(self.s_urlvalue.GetValue())
+            self.UsedTime.SetLabel("å·²ä½¿ç”¨æ—¶é—´ï¼š%d Min" % int(info[0]))
+            self.UsedFiux.SetLabel("å·²ä½¿ç”¨æµé‡ï¼š%.3f MByte" % float(float(info[1])/1024))
+            self.Balance.SetLabel("ä½™é¢ï¼š%.2f RMB" % float(float(info[2])/10000))
             self.taskBarIcon.func_updateme(self)
             self.timer.Start(3000)
         else:
@@ -230,7 +192,7 @@ class Gateway(wx.Frame):
         if self.memo.GetValue():
             conn = sqlite3.connect('C:\\save.db')
             curs = conn.cursor()
-            curs.execute("update account set username='%s',password='%s',logintype='%d'" % (encrypt(line1),encrypt(line2),self.radio_box.GetSelection()))
+            curs.execute("update account set username='%s',password='%s',s_url='%d'" % (encrypt(line1),encrypt(line2),self.s_urlvalue.GetValue()))
             conn.commit()
             curs.close()
             conn.close()
@@ -238,18 +200,18 @@ class Gateway(wx.Frame):
     def logoutfunc(self,event):
         self.timer.Stop()
         try:
-            info = search_info()
-            self.UsedTime.SetLabel("ÒÑÊ¹ÓÃÊ±¼ä£º%d Min" % int(info[0]))
-            self.UsedFiux.SetLabel("ÒÑÊ¹ÓÃÁ÷Á¿£º%.3f MByte" % float(float(info[1])/1024))
-            self.Balance.SetLabel("Óà¶î£º%.2f RMB" % float(float(info[2])/10000))
+            info = search_info(self.s_urlvalue.GetValue())
+            self.UsedTime.SetLabel("å·²ä½¿ç”¨æ—¶é—´ï¼š%d Min" % int(info[0]))
+            self.UsedFiux.SetLabel("å·²ä½¿ç”¨æµé‡ï¼š%.3f MByte" % float(float(info[1])/1024))
+            self.Balance.SetLabel("ä½™é¢ï¼š%.2f RMB" % float(float(info[2])/10000))
         except:
-            self.UsedTime.SetLabel("ÒÑÊ¹ÓÃÊ±¼ä£ºÎŞ·¨»ñÈ¡Êı¾İ")
-            self.UsedFiux.SetLabel("ÒÑÊ¹ÓÃÁ÷Á¿£ºÎŞ·¨»ñÈ¡Êı¾İ")
-            self.Balance.SetLabel("Óà¶î£ºÎŞ·¨»ñÈ¡Êı¾İ")
+            self.UsedTime.SetLabel("å·²ä½¿ç”¨æ—¶é—´ï¼šæ— æ³•è·å–æ•°æ®")
+            self.UsedFiux.SetLabel("å·²ä½¿ç”¨æµé‡ï¼šæ— æ³•è·å–æ•°æ®")
+            self.Balance.SetLabel("ä½™é¢ï¼šæ— æ³•è·å–æ•°æ®")
         ans=logout()
         if ans =="14":
             self.sbar.SetBackgroundColour('#FFFFF0')
-            self.sbar.SetStatusText('×¢Ïú³É¹¦£¡')
+            self.sbar.SetStatusText('æ³¨é”€æˆåŠŸï¼')
         else:
             self.showanser(ans)
         self.loginbutton.Enable(True)
@@ -257,125 +219,103 @@ class Gateway(wx.Frame):
 
     def updateinfo(self,event):
         try:
-            info = search_info()
+            info = search_info(self.s_urlvalue.GetValue())
         except IndexError:
             self.timer.Stop()
             self.loginbutton.Enable(True)
             self.logoutbutton.Enable(False)
             self.sbar.SetBackgroundColour('#FFFF00')
-            self.sbar.SetStatusText("ÄãÒÑÏÂÏß¡£")
-            self.showanser("»òÒòÕË»§ÎÊÌâ£¬ÕËºÅÒÑÏÂÏß¡£")
+            self.sbar.SetStatusText("ä½ å·²ä¸‹çº¿ã€‚")
+            self.showanser("æˆ–å› è´¦æˆ·é—®é¢˜ï¼Œè´¦å·å·²ä¸‹çº¿ã€‚")
         except urllib2.URLError:
             self.timer.Stop()
             self.sbar.SetBackgroundColour('RED')
-            self.sbar.SetStatusText("Êı¾İ¸üĞÂÊ§°Ü£¬Çë¼ì²éÍøÂçÉèÖÃ£¡")
+            self.sbar.SetStatusText("æ•°æ®æ›´æ–°å¤±è´¥ï¼Œè¯·æ£€æŸ¥ç½‘ç»œè®¾ç½®ï¼")
             self.timer.Start(4000)
         except httplib.BadStatusLine:
             self.timer.Stop()
             self.sbar.SetBackgroundColour('RED')
-            self.sbar.SetStatusText("·şÎñÆ÷Î´·µ»ØÊı¾İ£¡")
+            self.sbar.SetStatusText("æœåŠ¡å™¨æœªè¿”å›æ•°æ®ï¼")
             self.timer.Start(3000)
         except (socket.timeout,socket.error,socket.gaierror):
             self.timer.Stop()
             self.sbar.SetBackgroundColour('RED')
-            self.sbar.SetStatusText("Á¬½Ó³¬Ê±£¬Çë¼ì²éÍøÂçÉèÖÃ£¡")
+            self.sbar.SetStatusText("è¿æ¥è¶…æ—¶ï¼Œè¯·æ£€æŸ¥ç½‘ç»œè®¾ç½®ï¼")
             self.timer.Start(4000)
         else:
             self.sbar.SetBackgroundColour('#87CEFA')
-            self.sbar.SetStatusText('ÒÑµÇÂ½')
-            self.UsedTime.SetLabel("ÒÑÊ¹ÓÃÊ±¼ä£º%d Min" % int(info[0]))
-            self.UsedFiux.SetLabel("ÒÑÊ¹ÓÃÁ÷Á¿£º%.3f MByte" % float(float(info[1])/1024))
-            self.Balance.SetLabel("Óà¶î£º%.2f RMB" % float(float(info[2])/10000))
+            self.sbar.SetStatusText('å·²ç™»é™†')
+            self.UsedTime.SetLabel("å·²ä½¿ç”¨æ—¶é—´ï¼š%d Min" % int(info[0]))
+            self.UsedFiux.SetLabel("å·²ä½¿ç”¨æµé‡ï¼š%.3f MByte" % float(float(info[1])/1024))
+            self.Balance.SetLabel("ä½™é¢ï¼š%.2f RMB" % float(float(info[2])/10000))
             if 0 <float(float(info[2])/10000) <=0.2 :
                 self.sbar.SetBackgroundColour('#FFFF00')
-                self.sbar.SetStatusText('×¢Òâ£¬Óà¶îÒÑ²»×ã0.2Ôª£¬Ô¤¼ÆÊ¹ÓÃÊ±¼ä²»µ½Ò»Ğ¡Ê±£¬Çë¼°Ê±³äÖµ£¡')
+                self.sbar.SetStatusText('æ³¨æ„ï¼Œä½™é¢å·²ä¸è¶³0.2å…ƒï¼Œé¢„è®¡ä½¿ç”¨æ—¶é—´ä¸åˆ°ä¸€å°æ—¶ï¼Œè¯·åŠæ—¶å……å€¼ï¼')
 
     def sendback(self,event):
         webopen("mailto:labrusca@live.com")
-    def pubinfo(self,event):
-        try:
-            info_req = urllib2.Request("http://drcomupdate.sinaapp.com/information")
-            info_req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
-            info_response = urllib2.urlopen(info_req,timeout=5)
-            info_rsp = info_response.read()
-            wx.MessageBox(info_rsp, '·şÎñÆ÷¹«¸æÇø')
-        except urllib2.URLError:
-            self.showanser("·şÎñÆ÷ÎŞÏìÓ¦£¬Çë¼ì²éÍøÂçÉèÖÃ¡£")
     def othererror(self,errorprint):
         return "UNKONW ERROR:%s,please wait for next verion." % errorprint
     def showanser(self,n):
-        dialog=wx.MessageDialog(None,n,'ÌáÊ¾',wx.YES_DEFAULT|wx.ICON_ERROR)
+        dialog=wx.MessageDialog(None,n,'æç¤º',wx.YES_DEFAULT|wx.ICON_ERROR)
         result=dialog.ShowModal()
         if result==wx.ID_YES:
             dialog.Destroy()
         dialog.Destroy()
 
-def turn_num(ID): 
-    data = urlencode({'key':ID })   
-    headers = {"Content-type": "application/x-www-form-urlencoded",
-               "Accept": "text/plain"}
-    conn = httplib.HTTPConnection('my.njupt.edu.cn',timeout=5)
-    conn.request('POST', '/ccs/main/searchUser.do', data, headers)
-    httpres = conn.getresponse()
-    if httpres.status == 200:
-        deal = httpres.read()
-        pat = '[0-9]+'
-        if re.findall(pat,deal)[1] != "":
-            return re.findall(pat,deal)[1]
-
 #passwd is stringed
-def login(usr, passwd, url = school_url,force=0):
-     data = {} # ³õÊ¼»¯±íµ¥
+def login(usr, passwd, s_url = school_url):
+     data = {} # åˆå§‹åŒ–è¡¨å•
      data["DDDDD"] = usr 
-     data["upass"] = calpwd(passwd) #ÃÜÂë×ª»»
+     data["upass"] = calpwd(passwd) #å¯†ç è½¬æ¢
      data["R1"] = "0"
      data["R2"] = "1"
      data["para"] = "00"
      data["0MKKey"] = "123456"
-     data = urlencode(data)   #±àÂë
+     data = urlencode(data)   #ç¼–ç 
      if force:
          req=urllib2.Request(url+"/all.htm", data)
      else:
-         req=urllib2.Request(url, data)   #ÇëÇóÏìÓ¦
+         req=urllib2.Request(url, data)   #è¯·æ±‚å“åº”
      try:
          req.add_header('User-Agent','Python/2.7.7 SoftwareVersion:%s' % versioninfo)
-         response = urllib2.urlopen(req, data,timeout=5) #»ñµÃÏìÓ¦
+         response = urllib2.urlopen(req, data,timeout=5) #è·å¾—å“åº”
          rsp = response.read()
      except urllib2.URLError:
-         return u"µÇÂ½³¬Ê±£¬ÇëÖØÊÔ£¡"
+         return u"ç™»é™†è¶…æ—¶ï¼Œè¯·é‡è¯•ï¼"
      except httplib.BadStatusLine:
-         return u"·şÎñÆ÷Î´·µ»ØÊı¾İ£¡"
+         return u"æœåŠ¡å™¨æœªè¿”å›æ•°æ®ï¼"
      except socket.timeout:
-         return u"Á¬½Ó´íÎó£¬ÇëÖØÊÔ£¡"
-     temp = findall(r"You have successfully logged into our system.", rsp) #²éÑ¯×´Ì¬
-     if not temp: #µÇÂ¼Î´³É¹¦
+         return u"è¿æ¥é”™è¯¯ï¼Œè¯·é‡è¯•ï¼"
+     temp = findall(r"You have successfully logged into our system.", rsp) #æŸ¥è¯¢çŠ¶æ€
+     if not temp: #ç™»å½•æœªæˆåŠŸ
          temp = findall(r"Msg=(\d+)", rsp)[0]
          if temp =="01":
              errormsga = findall(r"msga=\'(.*)\'", rsp)[0]
              if errormsga !="":
                  if errormsga =="error0":
-                     return u"±¾IP²»ÔÊĞíWeb·½Ê½µÇÂ¼"
+                     return u"æœ¬IPä¸å…è®¸Webæ–¹å¼ç™»å½•"
                  elif errormsga =="error1":
-                     return u"±¾ÕËºÅ²»ÔÊĞíWeb·½Ê½µÇÂ¼"
+                     return u"æœ¬è´¦å·ä¸å…è®¸Webæ–¹å¼ç™»å½•"
                  else:
-                     return u"Î´Öª´íÎó£¬´íÎó´úÂë£º%s." % errormsga
+                     return u"æœªçŸ¥é”™è¯¯ï¼Œé”™è¯¯ä»£ç ï¼š%s." % errormsga
              else:
-                 return u"µÇÂ½Ê§°Ü£¡ÇëÏÈÈ·ÈÏÕËºÅ¼°ÃÜÂëµÄÕıÈ·ĞÔ¡£"
+                 return u"ç™»é™†å¤±è´¥ï¼è¯·å…ˆç¡®è®¤è´¦å·åŠå¯†ç çš„æ­£ç¡®æ€§ã€‚"
          elif temp =="02":
              xip = findall(r"xip=\'(\d+)\.(\d+)\.(\d+).(\d+)\.\'", rsp)[0]
-             return u"¸ÃÕËºÅÕıÔÚÊ¹ÓÃÖĞ£¬IPµØÖ·£º%s" % xip
+             return u"è¯¥è´¦å·æ­£åœ¨ä½¿ç”¨ä¸­ï¼ŒIPåœ°å€ï¼š%s" % xip
          elif temp =="03":
-             return u"±¾ÕËºÅÖ»ÄÜÔÚÖ¸¶¨µØÖ·Ê¹ÓÃ"
+             return u"æœ¬è´¦å·åªèƒ½åœ¨æŒ‡å®šåœ°å€ä½¿ç”¨"
          elif temp =="04":
-             return u"±¾ÕËºÅ·ÑÓÃ³¬Ö§»òÊ±³¤Á÷Á¿³¬¹ıÏŞÖÆ"
+             return u"æœ¬è´¦å·è´¹ç”¨è¶…æ”¯æˆ–æ—¶é•¿æµé‡è¶…è¿‡é™åˆ¶"
          elif temp =="05":
-             return u"±¾ÕËºÅÔİÍ£Ê¹ÓÃ"
+             return u"æœ¬è´¦å·æš‚åœä½¿ç”¨"
          elif temp =="11":
-             return u"±¾ÕËºÅÖ»ÄÜÔÚÖ¸¶¨µØÖ·Ê¹ÓÃ"
+             return u"æœ¬è´¦å·åªèƒ½åœ¨æŒ‡å®šåœ°å€ä½¿ç”¨"
      else:
          return 1
    
-def calpwd(init_pwd):   #Ê¹ÓÃmd5½øĞĞÃÜÂë¼ÓÃÜ
+def calpwd(init_pwd):   #ä½¿ç”¨md5è¿›è¡Œå¯†ç åŠ å¯†
      pid = '1'
      calg='12345678'
      tmp = pid + init_pwd + calg
@@ -387,11 +327,11 @@ def logout():
         response = urllib2.urlopen(school_url + "/F.htm",timeout=5)
         rsp = response.read()
     except urllib2.URLError:
-        return u"×¢ÏúÊ§°Ü£¬ÍøÂçÎŞÏìÓ¦£¡"
+        return u"æ³¨é”€å¤±è´¥ï¼Œç½‘ç»œæ— å“åº”ï¼"
     except httplib.BadStatusLine:
-        return u"·şÎñÆ÷Î´·µ»ØÊı¾İ£¡"
+        return u"æœåŠ¡å™¨æœªè¿”å›æ•°æ®ï¼"
     except socket.timeout:
-        return u"Á¬½Ó´íÎó£¬ÇëÖØÊÔ£¡"
+        return u"è¿æ¥é”™è¯¯ï¼Œè¯·é‡è¯•ï¼"
     temp = findall(r"Msg=(\d+)", rsp)[0]
     if temp == "01":
         logouterror = findall(r"msga=\'(.+)\'", rsp)[0]
@@ -399,14 +339,14 @@ def logout():
     else:
         return temp
 
-#¼Ó½âÃÜ¹¦ÄÜ£¬Î´À´°æ±¾ÖĞĞŞ¸Ä
+#åŠ è§£å¯†åŠŸèƒ½ï¼Œæœªæ¥ç‰ˆæœ¬ä¸­ä¿®æ”¹
 def encrypt(s):
     return base64.encodestring(s)
 
 def decrypt(s):
     return base64.decodestring(s)
 
-def search_info():
+def search_info(school_url):
     response = urllib2.urlopen(school_url,timeout=8)
     rsp = response.read()
     t = [0,0,0]
